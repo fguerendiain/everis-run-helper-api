@@ -1,6 +1,6 @@
-import { Request, Response } from 'express'
-import { ProductionDBTools }  from '../tools/productionDB'
-import { NOCTools }  from '../tools/NOCTools'
+import { Request, Response } from 'express';
+import { ProductionDBTools }  from '../tools/';
+import { NOCTools }  from '../tools/NOCTools';
 
 export function run(req: Request, res: Response){
     const results = []

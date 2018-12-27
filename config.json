@@ -1,3 +1,24 @@
 {
-	"apiPort":4780
+	"apiPort":4780,
+
+	"bbddoracle":{
+		"prd":{
+			"connectString":"hostname/servicename",
+			"user":"",
+			"password":""
+		},
+		"hml":{
+			"connectString":"hostname/servicename",
+			"user":"",
+			"password":""
+		},
+		"qa":{
+			"connectString":"hostname/servicename",
+			"user":"",
+			"password":""
+		}
+
+
+	}
+
 }
