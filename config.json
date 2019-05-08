@@ -3,22 +3,37 @@
 
 	"bbddoracle":{
 		"prd":{
-			"connectString":"hostname/servicename",
-			"user":"",
-			"password":""
+			"user":"gruizdec",
+			"password":"gruiz123",
+			"connectString":"sadebd-cluster.gcba.gob.ar/sadeprd.gcba.gob.ar"
 		},
 		"hml":{
-			"connectString":"hostname/servicename",
-			"user":"",
-			"password":""
+			"user":"gruizdec",
+			"password":"gruiz123",
+			"connectString":"sadebd-cluster.hml.gcba.gob.ar/sadehml.hml.gcba.gob.ar"
 		},
 		"qa":{
-			"connectString":"hostname/servicename",
-			"user":"",
-			"password":""
+			"user":"LOYS_MAN_SADE",
+			"password":"loys_man_sade",
+			"connectString":"exadb.gcba.gob.ar/srv_sadeqa.gcba.gob.ar"
+		},
+		"capa":{
+			"user":"gruizdec",
+			"password":"gruiz123",
+			"connectString":"sadebd-cluster-cap.hml.gcba.gob.ar/sadecapa"
+		},
+		"standby":{
+			"user":"lparlov",
+			"password":"l4urap",
+			"connectString":"drpdm01-scan.gcba.gob.ar/sadetst.gcba.gob.ar"
+		},
+		"test":{
+			"user":"TAD_SADE",
+			"password":"tad_sade",
+			"connectString":"7.217.8.215/TRACKTESTBD.GCABA.EVERIS.INT"
 		}
-
-
 	}
-
+	
 }
+
+

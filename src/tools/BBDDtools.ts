@@ -1,22 +1,67 @@
 import * as oracledb from 'oracledb'
-import * as config from '../config'
 import * as logger from '../logger'
 
 
-const bbddoracle = {
-    user          : config.get("bbddoracle.prd.user"),
-    password      : config.get("bbddoracle.prd.password"),
-    connectString : config.get("bbddoracle.prd.connectString")
+//RETORNA RESULTADO DE QUERY COMO PROMISE
+export function BBDDData(bbddoracle,queryString){
+  return new Promise((resolve,reject)=>{
+     query(bbddoracle,queryString,resolve);
+  })};
+
+//GENERA CONEXION CON BBDD, REALIZA CONSULTA Y CIERRA LA CONEXION
+function query(bbddoracle,queryString,callback){          
+  connect(bbddoracle,(err,bbddconnection)=>{
+    if(err){
+      logger.info("BBDD","Error al conectar a la base");
+    }
+    else{
+      logger.info("BBDD","Se abrio conexion a la BBDD");
+      bbddconnection.execute(queryString,function(err, queryResponse) {
+          logger.info("BBDD","Se realizo consulta: "+queryString);
+          if (err) {
+            logger.error("BBDD",err.message);
+            return callback(err);
+          }
+          logger.info("BBDD","Respuesta: "+queryResponse.rows);
+          close(bbddconnection,(err)=>{
+            if(err){
+              logger.error("BBDD",err.message);
+              return callback(err);
+            }
+            else{
+              logger.info("BBDD","Se cerro conexion a BBDD");
+            }
+          })
+          return callback(queryResponse.rows);
+        }
+      );
+      }
+    });
+}
+          
+//ABRE CONECCION CON BBDD
+function connect(bbddoracle : any, callback){
+  oracledb.getConnection(bbddoracle,
+    function(err, bdconnect) {
+      if (err) {
+        logger.error("BBDD",err.message);
+        callback(err,null);
+        return;
+      }
+    callback(null,bdconnect);
+    }
+  )
 }
 
-let bdconnect;
-
-
-try{
-    bdconnect = oracledb.getConnection(bbddoracle);
+//CIERRA CONEXION CON BBDD
+function close(BBDDConnection,callback) {
+  BBDDConnection.close(
+    function(err) {
+      if (err){
+        callback(err);
+        return
+      }
+      callback(null);
+    }  
+  );
 }
-catch(err){
-    logger.error('BBDD','Error al conectar a BBDD oracle produccion - '+err.message);
-}
-
-    bdconnect.execute();

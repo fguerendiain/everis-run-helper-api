@@ -7,4 +7,4 @@ const apiPort:number = +config.get('apiPort');
 const api = APIFactory.build();
 const server = http.createServer(api);
 server.listen(apiPort);
-log.info('SERVER',`Ready: Listening on port ${apiPort}`)
+log.info('SERVER',`Ready: Listening on port ${apiPort}`);
