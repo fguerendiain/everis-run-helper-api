@@ -23,6 +23,7 @@
     "@types/moment": "^2.13.0",
     "@types/oracledb": "^1.11.34",
     "@types/request": "^2.48.1",
+    "axios": "^0.18.0",
     "cors": "^2.8.5",
     "express": "^4.16.4",
     "http": "0.0.0",

@@ -1,6 +1,5 @@
 import * as logger from '../logger';
 import * as request from 'request-promise-native';
-import { resolve } from 'url';
 import { isNullOrUndefined } from 'util';
 
 //RETORNA RESULTADO DE CONSULTA COMO PROMISE
