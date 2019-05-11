@@ -16,4 +16,16 @@ function error(tag, msg) {
     log('ERROR', tag, msg);
 }
 exports.error = error;
+function awaitAsyncErrorHandler(msg) {
+    log('ERROR', 'PROMISE', msg);
+}
+exports.awaitAsyncErrorHandler = awaitAsyncErrorHandler;
+function taskBeginInfo(msg) {
+    log('INFO', 'TASK', ' --COMIENZA EJECUCION DE TAREA: ' + msg);
+}
+exports.taskBeginInfo = taskBeginInfo;
+function taskEndInfo(msg) {
+    log('INFO', 'TASK', ' --FINALIZA EJECUCION DE TAREA: ' + msg);
+}
+exports.taskEndInfo = taskEndInfo;
 //# sourceMappingURL=logger.js.map

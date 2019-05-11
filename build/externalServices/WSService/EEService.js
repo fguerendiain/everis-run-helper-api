@@ -52,9 +52,7 @@ exports.generarPaseEEaRepaSector = generarPaseEEaRepaSector;
 //GENERAR PASE DE EXPEDIENTE A USUARIO
 function generarPaseEEaUsuario(v_codsade, v_estadoEx, v_sistemaOrigen, v_usuarioDestino, v_usuarioOrigen) {
     let v_url = 'http://sade-mule.gcba.gob.ar/EEServices/generar-pase';
-    let v_xml = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ar="http://ar.gob.gcaba.ee.services.external/"><soapenv:Header/><soapenv:Body><ar:generarPaseEE><datosPase><codigoEE>' + v_codsade + '</codigoEE><esUsuarioDestino>1</esUsuarioDestino><estadoSeleccionado>' + v_estadoEx;
-    '+</estadoSeleccionado><motivoPase>Se realiza pase para regularización de inconsistencia del expediente</motivoPase><sistemaOrigen>' + v_sistemaOrigen + '</sistemaOrigen><usuarioDestino>' + v_usuarioDestino;
-    '+</usuarioDestino>--><usuarioOrigen>' + v_usuarioOrigen + '</usuarioOrigen></datosPase></ar:generarPaseEE></soapenv:Body></soapenv:Envelope>';
+    let v_xml = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ar="http://ar.gob.gcaba.ee.services.external/"><soapenv:Header/><soapenv:Body><ar:generarPaseEE><datosPase><codigoEE>' + v_codsade + '</codigoEE><esUsuarioDestino>1</esUsuarioDestino><estadoSeleccionado>' + v_estadoEx + '+</estadoSeleccionado><motivoPase>Se realiza pase para regularización de inconsistencia del expediente</motivoPase><sistemaOrigen>' + v_sistemaOrigen + '</sistemaOrigen><usuarioDestino>' + v_usuarioDestino + '+</usuarioDestino>--><usuarioOrigen>' + v_usuarioOrigen + '</usuarioOrigen></datosPase></ar:generarPaseEE></soapenv:Body></soapenv:Envelope>';
     return wstools.soapRequest(v_url, v_xml);
 }
 exports.generarPaseEEaUsuario = generarPaseEEaUsuario;

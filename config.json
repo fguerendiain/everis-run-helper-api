@@ -32,7 +32,15 @@
 			"password":"tad_sade",
 			"connectString":"7.217.8.215/TRACKTESTBD.GCABA.EVERIS.INT"
 		}
-	}
+	},
+
+	"credenciales":{
+		"jira":{
+			"user":"fguerend",
+			"password":"Mamu22076"
+		}
+	},
+	"wstimeout":100000
 	
 }
 

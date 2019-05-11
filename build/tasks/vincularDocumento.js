@@ -8,37 +8,45 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const util_1 = require("util");
 const config = require("../config");
+const logger = require("../logger");
+const promisetools = require("../tools/PromiseTools");
 const bbddtools = require("../tools/BBDDtools");
 const pdiservices = require("../externalServices/WSService/PDIService");
 const gpservices = require("../externalServices/RESTService/GPService");
+const jiraservices = require("../externalServices/RESTService/JIRAService");
+//import * as nocservices from '../externalServices/RESTService/NOCService';
 const bbddoracle = config.get("bbddoracle");
 function run(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        logger.taskBeginInfo("VINCULAR DOCUMENTO");
         let queryString = 'select codexpediente from loys_man_sade.st_expediente where rownum < 2';
         let queryString1 = 'select NOMBRE_APELLIDO from TAD_SADE.TAD_PERSONA WHERE NOMBRE_APELLIDO IS NOT NULL AND rownum = 1';
         let idExpTad = '1625485';
         let direccion = ['amenabar', '2000'];
-        let stringBuilder;
+        let queryBuscaJira = 'Gestion Administrativa y de tareas Internas';
+        let queryBuscaJiraTrans = 'BISADE-69361';
         let querys = [
-            yield bbddtools.BBDDData(bbddoracle.prd, queryString),
-            yield bbddtools.BBDDData(bbddoracle.prd, queryString1),
-            yield gpservices.getParticipantesExpediente(idExpTad),
-            yield pdiservices.getCalleDireccionValidas(direccion[0], direccion[1])
+            yield bbddtools.BBDDData(bbddoracle.prd, queryString).catch((err) => logger.awaitAsyncErrorHandler(err)),
+            yield bbddtools.BBDDData(bbddoracle.prd, queryString1).catch((err) => logger.awaitAsyncErrorHandler(err)),
+            yield pdiservices.getCalleDireccionValidas(direccion[0], direccion[1]).catch((err) => logger.awaitAsyncErrorHandler(err)),
+            yield gpservices.getParticipantesExpediente(idExpTad).catch((err) => logger.awaitAsyncErrorHandler(err)),
+            yield jiraservices.getJiraByText(queryBuscaJira).catch((err) => logger.awaitAsyncErrorHandler(err))
+            //    await jiraservices.getTransicionJira(queryBuscaJiraTrans).catch((err)=>logger.awaitAsyncErrorHandler(err))
         ];
-        Promise.all(querys)
-            .then((results) => {
-            for (let i = 0; i < results.length; i++) {
-                if (util_1.isNullOrUndefined(stringBuilder)) {
-                    stringBuilder = results[i];
-                }
-                else {
-                    stringBuilder = stringBuilder + " | " + results[i];
-                }
-            }
-            res.status(200).send(stringBuilder);
-        });
+        promisetools.handlePromises(querys, "VINCULAR DOCUMENTO", res);
+        // Promise.all(querys)
+        //     .then((results)=>{
+        //         for(let i = 0; i < results.length; i++){
+        //             if (isNullOrUndefined(results[i])){
+        //                 logger.error('PROMISE','response [' + results[i] + ']')
+        //             }else{
+        //                 jsonResponseArray.response.push(results[i]);
+        //             }
+        //         }
+        //         res.status(200).send(jsonResponseArray.response);
+        //         logger.taskEndInfo("VINCULAR DOCUMENTO");
+        //     });
     });
 }
 exports.run = run;

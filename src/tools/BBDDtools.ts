@@ -1,38 +1,45 @@
 import * as oracledb from 'oracledb'
 import * as logger from '../logger'
+import { isNullOrUndefined } from 'util';
 
 
 //RETORNA RESULTADO DE QUERY COMO PROMISE
-export function BBDDData(bbddoracle,queryString){
+export function BBDDData(bbddoracle,queryString,callMethod?){
+  if (isNullOrUndefined(callMethod)){
+    callMethod = BBDDData.name;
+  }
   return new Promise((resolve,reject)=>{
-     query(bbddoracle,queryString,resolve);
+     query(bbddoracle,queryString,resolve,reject,callMethod);
   })};
 
 //GENERA CONEXION CON BBDD, REALIZA CONSULTA Y CIERRA LA CONEXION
-function query(bbddoracle,queryString,callback){          
+function query(bbddoracle,queryString,resolve,reject,callMethod){          
   connect(bbddoracle,(err,bbddconnection)=>{
     if(err){
       logger.info("BBDD","Error al conectar a la base");
     }
     else{
       logger.info("BBDD","Se abrio conexion a la BBDD");
-      bbddconnection.execute(queryString,function(err, queryResponse) {
+      bbddconnection.execute(queryString,[], // no binds
+        {
+          outFormat: bbddconnection.OBJECT
+        },function(err, queryResponse) {
           logger.info("BBDD","Se realizo consulta: "+queryString);
           if (err) {
             logger.error("BBDD",err.message);
-            return callback(err);
+            return reject(err);
           }
           logger.info("BBDD","Respuesta: "+queryResponse.rows);
           close(bbddconnection,(err)=>{
             if(err){
               logger.error("BBDD",err.message);
-              return callback(err);
+              return reject(err);
             }
             else{
               logger.info("BBDD","Se cerro conexion a BBDD");
             }
           })
-          return callback(queryResponse.rows);
+          return resolve(JSON.parse('{"'+callMethod+'":'+JSON.stringify(queryResponse)+'}'));
         }
       );
       }

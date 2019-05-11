@@ -14,3 +14,15 @@ export function info(tag:string, msg:string){
 export function error(tag:string, msg:string){
     log('ERROR', tag, msg);
 }
+
+export function awaitAsyncErrorHandler(msg:string){
+    log('ERROR', 'PROMISE', msg);
+}
+
+export function taskBeginInfo(msg:string){
+    log('INFO', 'TASK', ' --COMIENZA EJECUCION DE TAREA: '+msg);
+}
+
+export function taskEndInfo(msg:string){
+    log('INFO', 'TASK', ' --FINALIZA EJECUCION DE TAREA: '+msg);
+}
