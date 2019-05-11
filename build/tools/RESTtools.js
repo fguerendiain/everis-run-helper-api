@@ -36,7 +36,7 @@ function queryApiRest(v_options, resolve, reject, callMethod) {
             return reject(err);
         }
         else {
-            logger.info("REST", response.statusCode + " - " + JSON.stringify(body).replace(/\r\n    /g, ''));
+            logger.info("REST", response.statusCode + " - " + JSON.stringify(body));
             return resolve(JSON.parse('{"' + callMethod + '":' + body + '}'));
         }
     });
