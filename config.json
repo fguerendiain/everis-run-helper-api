@@ -34,14 +34,25 @@
 		}
 	},
 
-	"credenciales":{
+	"credentials":{
 		"jira":{
-			"user":"fguerend",
-			"password":"Mamu22076"
+			"host":"https://steps.everis.com/jiraproy/rest/api/2/",
+			"user":"laparlov",
+			"password":"UmFtMG50M2FtMA=="
+		},
+		"senderGmailAccount":{
+			"user":"everis.produccion@gmail.com",
+			"pass":"MTIzNG5vaWM="
 		}
 	},
-	"wstimeout":100000
-	
+
+	"wstimeout":100000,
+
+	"logs":{
+		"logsavelocation":"./logs/",
+		"logsavefilename":"everis-run-helper",
+		"logfileextension":"txt"
+	}
 }
 
 

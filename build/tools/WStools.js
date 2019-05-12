@@ -1,12 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const logger = require("../logger");
-const axios = require('axios');
 const config = require("../config");
 const xmlToJson = require("xml2json");
+const axios = require('axios');
 const wstimeout = config.get("wstimeout");
 //RETORNA PROMESA CON CONSULTA SOAP
 function soapRequest(url, xml, callMethod) {
+    logger.info('SOAP', 'Genera consulta: ' + xml);
     return new Promise((resolve, reject) => {
         axios({
             method: 'post',
@@ -24,12 +25,12 @@ function soapRequest(url, xml, callMethod) {
             logger.info('SOAP', response.status + ' - ' + response.data);
         }).catch((error) => {
             if (error.response) {
-                logger.error('SOAP', error);
                 reject(error.response.data);
+                logger.error('SOAP', error);
             }
             else {
-                logger.error('SOAP', error);
                 reject(error);
+                logger.error('SOAP', error);
             }
         });
     });

@@ -5,4 +5,8 @@ function get(property) {
     return data[property];
 }
 exports.get = get;
+function passDecoder(pass) {
+    return Buffer.from(pass, 'base64').toString("ascii");
+}
+exports.passDecoder = passDecoder;
 //# sourceMappingURL=config.js.map

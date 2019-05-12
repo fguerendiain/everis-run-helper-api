@@ -21,8 +21,9 @@ function apiRestConsume(v_url, v_method, v_header, callMethod, v_body, v_params,
         if (!util_1.isNullOrUndefined(v_auth)) {
             options += '"auth":' + v_auth + ',';
         }
-        options += '"header":' + v_header;
+        options += '"headers":' + v_header;
         options += '}';
+        logger.info('REST', 'Genera consulta: ' + options);
         queryApiRest(options, resolve, reject, callMethod);
     });
 }
@@ -36,9 +37,18 @@ function queryApiRest(v_options, resolve, reject, callMethod) {
             return reject(err);
         }
         else {
-            logger.info("REST", response.statusCode + " - " + JSON.stringify(body));
+            logger.info("REST", response.statusCode + " - " + escapeSpecialChars(JSON.stringify(body)));
             return resolve(JSON.parse('{"' + callMethod + '":' + body + '}'));
         }
     });
 }
+function escapeSpecialChars(str) {
+    return str.replace(/\\r\\n/g, "")
+        .replace(/:\'/g, ":")
+        .replace(/\,\\/g, ',"')
+        .replace(/\\\"/g, '"')
+        .replace(/ /g, "");
+}
+exports.escapeSpecialChars = escapeSpecialChars;
+;
 //# sourceMappingURL=RESTtools.js.map

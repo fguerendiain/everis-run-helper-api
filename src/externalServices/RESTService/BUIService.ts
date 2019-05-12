@@ -3,7 +3,7 @@ import { isNullOrUndefined } from 'util';
 
 
 //CAMBIA ESTADO DE COMPROBANTE BUI (default PAGADA)
-export function cambiarEstadoBUI(idBui,estado?){
+export function cambiarEstadoBUI(idBui:string,estado?:string){
     let url = 'http://sade-mule.gcba.gob.ar/rest/';
     let method = "POST";
     let headers = '{"Content-Type":"application/json","contexttype":"application/json"}';

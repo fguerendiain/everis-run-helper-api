@@ -1,7 +1,7 @@
 import * as oracledb from 'oracledb'
 import * as logger from '../logger'
+import * as config from '../config';
 import { isNullOrUndefined } from 'util';
-
 
 //RETORNA RESULTADO DE QUERY COMO PROMISE
 export function BBDDData(bbddoracle,queryString,callMethod?){

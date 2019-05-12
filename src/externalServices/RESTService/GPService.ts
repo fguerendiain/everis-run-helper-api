@@ -1,7 +1,7 @@
 import * as resttools from '../../tools/RESTtools';
 
 //INFORMAR PARTICIPANTE PARA EXPEDIENTE
-export function informarParticipante(v_idExpedienteTad,v_trata,v_codSade,v_cuitParticipante,v_perfilParticipante,v_interviniente,v_sistema,v_nombresParticipante,v_apellidosParticipante,v_razonSocial){
+export function informarParticipante(v_idExpedienteTad:string,v_trata:string,v_codSade:string,v_cuitParticipante:string,v_perfilParticipante:string,v_interviniente:string,v_sistema:string,v_nombresParticipante:string,v_apellidosParticipante:string,v_razonSocial:string){
     let url = 'https://servicios.gcba.gob.ar/api/v1/tramites/'+v_idExpedienteTad+'/participaciones';
     let method = "POST";
     let headers = '{"Content-Type":"application/json","Accept":"application/json"}';
@@ -10,7 +10,7 @@ export function informarParticipante(v_idExpedienteTad,v_trata,v_codSade,v_cuitP
 }
 
 //ELIMINAR PARTICIPANTE PARA EXPEDIENTE
-export function deleteParticipante(v_idExpedienteTad,v_cuitParticipante,v_perfilParticipante,v_sistema){
+export function deleteParticipante(v_idExpedienteTad:string,v_cuitParticipante:string,v_perfilParticipante:string,v_sistema:string){
     let url = 'https://servicios.gcba.gob.ar/api/v1/tramites/'+v_idExpedienteTad+'/participaciones';
     let method = "DELETE";
     let headers = '{"Content-Type":"application/json","Accept":"application/json"}';
@@ -19,7 +19,7 @@ export function deleteParticipante(v_idExpedienteTad,v_cuitParticipante,v_perfil
 }
 
 //OBTENER PARTICIPANTES DE UN EXPEDIENTE
-export function getParticipantesExpediente(v_idExpedienteTad){
+export function getParticipantesExpediente(v_idExpedienteTad:string){
     let url = 'https://servicios.gcba.gob.ar/api/v1/tramites/'+v_idExpedienteTad+'/participaciones';
     let method = "GET";
     let headers = '{"Content-Type":"application/json","Accept":"application/json"}';
@@ -27,7 +27,7 @@ export function getParticipantesExpediente(v_idExpedienteTad){
 }
 
 //OBTENER PERFILES HABILITADOS POR TRATA DE UN EXPEDIENTE
-export function getPerfilesPorTrata(v_trataTad){
+export function getPerfilesPorTrata(v_trataTad:string){
     let url = 'https://servicios.gcba.gob.ar/api/v1/tiposTramite/'+v_trataTad+'/perfiles';
     let method = "GET";
     let headers = '{"Content-Type":"application/json","Accept":"application/json"}';

@@ -1,6 +1,8 @@
+import * as config from '../config';
 import * as logger from '../logger';
 import * as request from 'request-promise-native';
 import { isNullOrUndefined } from 'util';
+
 
 //RETORNA RESULTADO DE CONSULTA COMO PROMISE
 export function apiRestConsume(v_url:string, v_method:string, v_header:string, callMethod:string, v_body?:string, v_params?:string, v_auth?:string){
@@ -21,22 +23,32 @@ export function apiRestConsume(v_url:string, v_method:string, v_header:string, c
         if (!isNullOrUndefined(v_auth)){
             options += '"auth":' + v_auth + ',';
         }
-        options += '"header":' + v_header;
+        options += '"headers":' + v_header;
         options += '}';
+
+        logger.info('REST','Genera consulta: '+options)
+
         queryApiRest(options,resolve,reject,callMethod);
 
     })};
 
 //ARMADO DE CONSULTA A SERVICIO REST
 function queryApiRest (v_options:string,resolve,reject,callMethod){
-       
     request(JSON.parse(v_options),(err,response, body)=>{
         if(err){
             logger.error("REST",err);
             return reject(err);
         }else{ 
-            logger.info("REST",response.statusCode + " - " + JSON.stringify(body));
+            logger.info("REST",response.statusCode + " - " + escapeSpecialChars(JSON.stringify(body)));
             return resolve(JSON.parse('{"'+callMethod+'":'+body+'}'));
         }
     });
 }
+
+export function escapeSpecialChars(str:string) {
+    return str.replace(/\\r\\n/g, "")
+                .replace(/:\'/g, ":")
+                .replace(/\,\\/g, ',"')
+                .replace(/\\\"/g, '"')
+                .replace(/ /g, "");
+};
