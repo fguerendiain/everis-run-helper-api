@@ -2,6 +2,7 @@ import * as config from '../config';
 import * as logger from '../logger';
 import * as request from 'request-promise-native';
 import { isNullOrUndefined } from 'util';
+import { stringify } from 'querystring';
 
 
 //RETORNA RESULTADO DE CONSULTA COMO PROMISE
@@ -38,7 +39,11 @@ function queryApiRest (v_options:string,resolve,reject,callMethod){
         if(err){
             logger.error("REST",err);
             return reject(err);
-        }else{ 
+        }else{
+            if(response.statusCode == 204){
+                logger.info("REST",response.statusCode + " - " + escapeSpecialChars(JSON.stringify('{"'+callMethod+'":"no content"}')));
+                return resolve(JSON.parse('{"'+callMethod+'":"no content"}'));
+            }
             logger.info("REST",response.statusCode + " - " + escapeSpecialChars(JSON.stringify(body)));
             return resolve(JSON.parse('{"'+callMethod+'":'+body+'}'));
         }

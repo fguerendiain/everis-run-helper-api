@@ -5,6 +5,24 @@ const config = require("../../config");
 //import JiraApi from 'jira-client';
 const JIRACREDENTIALS = config.get("credentials").jira;
 //BUSCAR JIRA POR QUERY
+function getJiraById(v_query) {
+    let url = encodeURI(JIRACREDENTIALS.host);
+    let method = "GET";
+    let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + '}';
+    let param = encodeURI('issue/' + v_query + '?fields&expand');
+    return resttools.apiRestConsume(url, method, headers, getJiraById.name, null, param);
+}
+exports.getJiraById = getJiraById;
+//BORRAR JIRA POR ID
+function deleteJiraById(v_query) {
+    let url = encodeURI(JIRACREDENTIALS.host);
+    let method = "DELETE";
+    let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + '}';
+    let param = encodeURI('issue/' + v_query + '?fields&expand');
+    return resttools.apiRestConsume(url, method, headers, deleteJiraById.name, null, param);
+}
+exports.deleteJiraById = deleteJiraById;
+//BUSCAR JIRA POR QUERY
 function getJiraByText(v_query) {
     let url = encodeURI(JIRACREDENTIALS.host);
     let method = "GET";

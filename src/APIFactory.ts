@@ -2,7 +2,8 @@ import * as express from 'express'
 import { Express } from 'express'
 import * as cors from 'cors'
 import * as bodyParser from 'body-parser'
-import * as vincularDocumento from './tasks/vincularDocumento'
+import * as vincularDocumento from './tasks/vincularDocumento';
+import * as nocToJiraConverter from './tasks/nocToJiraConverter';
 import * as BBDDtools from './tools/BBDDtools'
 
 export function build():Express{
@@ -12,8 +13,9 @@ export function build():Express{
     app.use(bodyParser.json());
     app.use(cors());
 
-//    app.get("/test", BBDDtools.test);
-   app.get("/vincluarDocumento", vincularDocumento.run);
+//    app.get("URL", FUNCTION);
+    app.get("/vincularDocumento", vincularDocumento.run);
+    app.get("/noctojiraconverter", nocToJiraConverter.run);
 
 
 
