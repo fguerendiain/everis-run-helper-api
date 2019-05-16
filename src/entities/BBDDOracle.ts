@@ -1,6 +1,5 @@
 import * as oracledb from 'oracledb'
 import * as logger from '../logger'
-import { isNullOrUndefined } from 'util';
 
 export class BBDDinstance{
 

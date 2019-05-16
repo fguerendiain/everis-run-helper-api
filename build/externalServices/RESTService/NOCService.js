@@ -1,3 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+//CREAR NOC
+//ELIMINAR NOC
+//BUSCAR NOC POR ID
+//BUSCAR NOC POR QUERY
+//CREAR COMENTARIO
+//BORRAR COMENTARIO
+//BUSCAR COMENTARIOS
+//ASIGNAR GRUPO Y TECNICO
+//ADJUNTAR ARCHIVO
+//DESCARGAR ARCHIVOS ADJUNTOS
 //# sourceMappingURL=NOCService.js.map

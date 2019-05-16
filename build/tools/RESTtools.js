@@ -42,7 +42,8 @@ function queryApiRest(v_options, resolve, reject, callMethod) {
                 return resolve(JSON.parse('{"' + callMethod + '":"no content"}'));
             }
             logger.info("REST", response.statusCode + " - " + escapeSpecialChars(JSON.stringify(body)));
-            return resolve(JSON.parse('{"' + callMethod + '":' + body + '}'));
+            //            return resolve(JSON.parse('{"'+callMethod+'":'+body+'}'));
+            return resolve(JSON.parse(body));
         }
     });
 }

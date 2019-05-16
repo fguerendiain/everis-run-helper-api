@@ -4,7 +4,7 @@ import * as logger from '../logger';
 
 //Task makeer Resources
 import * as promisetools from '../tools/PromiseTools';
-import * as bbddtools from '../tools/BBDDtools';
+import * as bbddtools from '../entities/BBDDOracle';
 import * as emailtools from '../tools/EMAILTools';
 import * as eeservices from '../externalServices/WSService/EEService';
 import * as gedoservices from '../externalServices/WSService/GEDOService';

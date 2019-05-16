@@ -12,7 +12,7 @@ const config = require("../config");
 const logger = require("../logger");
 //Task makeer Resources
 const promisetools = require("../tools/PromiseTools");
-const bbddtools = require("../tools/BBDDtools");
+const bbddtools = require("../entities/BBDDOracle");
 const emailtools = require("../tools/EMAILTools");
 const pdiservices = require("../externalServices/WSService/PDIService");
 const gpservices = require("../externalServices/RESTService/GPService");

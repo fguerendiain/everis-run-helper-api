@@ -6,6 +6,7 @@ import { isNullOrUndefined } from 'util';
 import * as promisetools from '../tools/PromiseTools';
 import * as emailtools from '../tools/EMAILTools';
 import * as jiraservices from '../externalServices/RESTService/JIRAService';
+import { Jira } from '../entities/Jira';
 // import * as nocervices from '../externalServices/RESTService/NOCService';
 // import * as gsheetservices from '../externalServices/RESTService/GSHEETService';
 
@@ -18,17 +19,24 @@ export async function run(req: express.Request, res: express.Response){
 
     response = res;    
 
-    let idJira = 'BISADE-69587';
+    let idJira = 'BISADE-48690';
     let serchJiraKeyWords = 'Gestion Administrativa';
 
     let querys = [
-        await jiraservices.getJiraByText(serchJiraKeyWords).catch((err)=>logger.awaitAsyncErrorHandler(err)),
-        await jiraservices.getJiraById(idJira).catch((err)=>logger.awaitAsyncErrorHandler(err)),
-        await jiraservices.deleteJiraById(idJira).catch((err)=>logger.awaitAsyncErrorHandler(err))
+//        await jiraservices.getJiraByText(serchJiraKeyWords).catch((err)=>logger.awaitAsyncErrorHandler(err)),
+    //    await jiraservices.getJiraById(idJira).catch((err)=>logger.awaitAsyncErrorHandler(err)),
+    //    await jiraservices.deleteJiraById(idJira).catch((err)=>logger.awaitAsyncErrorHandler(err))
+    //      await jiraservices.getTransicionJira(idJira).catch((err)=>logger.awaitAsyncErrorHandler(err))
     ];
 
+    let jira1 = new Jira();
+    await jira1.jiraFillTicketCreator(idJira);
 
-    promisetools.handlePromises(querys,'PRUEBA: Retorno de Multiples consultas a servicios',makeItHappen);
+    console.log("OBJETO JIRA "+jira1.getDescription());
+
+    response.status(200).send(jira1.getDescription());
+
+//    promisetools.handlePromises(querys,'PRUEBA: Retorno de Multiples consultas a servicios',makeItHappen);
 
 }
 

@@ -1,6 +1,5 @@
 import * as resttools from '../../tools/RESTtools';
 import * as config from '../../config';
-//import JiraApi from 'jira-client';
 
 const JIRACREDENTIALS = config.get("credentials").jira;
 

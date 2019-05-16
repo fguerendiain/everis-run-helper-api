@@ -4,7 +4,6 @@ import * as cors from 'cors'
 import * as bodyParser from 'body-parser'
 import * as vincularDocumento from './tasks/vincularDocumento';
 import * as nocToJiraConverter from './tasks/nocToJiraConverter';
-import * as BBDDtools from './tools/BBDDtools'
 
 export function build():Express{
  
