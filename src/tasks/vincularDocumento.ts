@@ -18,7 +18,7 @@ import { isNullOrUndefined } from 'util';
 
 const BBDDORACLE = config.get("bbddoracle");
 const TASKNAME = 'VINCULAR DOCUMENTO'
-const RESPONSABLE = 'fguerendiain33@gmail.com'
+const RESPONSABLE = 'franco.javier.guerendiain@everis.com'
 
 let response: express.Response;
 
@@ -39,12 +39,12 @@ export async function run(req: express.Request, res: express.Response) {
 
     //ARRAY DE PROMESAS CON LAS CONSULTAS A LOS SERVICIOS NECESARIAS PARA LA TAREA
     let querys = [
-        await bbdd.BBDDData(queryString).catch((err) => logger.awaitAsyncErrorHandler(err)),
-        await bbdd.BBDDData(queryString1).catch((err) => logger.awaitAsyncErrorHandler(err)),
-        await gpservices.getParticipantesExpediente(idExpTad).catch((err) => logger.awaitAsyncErrorHandler(err)),
-        await pdiservices.getCalleDireccionValidas(direccion[0], direccion[1]).catch((err) => logger.awaitAsyncErrorHandler(err)),
-        await jiraservices.getJiraByText(queryBuscaJira).catch((err) => logger.awaitAsyncErrorHandler(err)),
-        await jiraservices.getTransicionJira(queryBuscaJiraTrans).catch((err) => logger.awaitAsyncErrorHandler(err))
+        await bbdd.BBDDData(queryString).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined}),
+        await bbdd.BBDDData(queryString1).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined}),
+        await gpservices.getParticipantesExpediente(idExpTad).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined}),
+        await pdiservices.getCalleDireccionValidas(direccion[0], direccion[1]).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined}),
+        await jiraservices.getJiraByText(queryBuscaJira).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined}),
+        await jiraservices.getTransicionJira(queryBuscaJiraTrans).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined}),
     ];
 
     promisetools.handlePromises(querys, 'PRUEBA: Retorno de Multiples consultas a servicios', makeItHappen);

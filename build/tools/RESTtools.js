@@ -37,15 +37,14 @@ function queryApiRest(v_options, resolve, reject, callMethod) {
             return reject(err);
         }
         else {
-            if (response.statusCode == 204) {
-                logger.info("REST", response.statusCode + " - " + escapeSpecialChars(JSON.stringify('{"' + callMethod + '":"no content"}')));
-                return resolve(JSON.parse('{"' + callMethod + '":"no content"}'));
+            if (response.statusCode != 200) {
+                logger.info("REST", response.statusCode + " - " + escapeSpecialChars(JSON.stringify(body)));
+                return resolve(JSON.parse(response.body));
             }
             logger.info("REST", response.statusCode + " - " + escapeSpecialChars(JSON.stringify(body)));
-            //            return resolve(JSON.parse('{"'+callMethod+'":'+body+'}'));
             return resolve(JSON.parse(body));
         }
-    });
+    }).catch((err) => { return reject(err); });
 }
 function escapeSpecialChars(str) {
     return str.replace(/\\r\\n/g, "")

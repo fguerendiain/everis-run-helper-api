@@ -21,7 +21,7 @@ const util_1 = require("util");
 //import * as nocservices from '../externalServices/RESTService/NOCService';
 const BBDDORACLE = config.get("bbddoracle");
 const TASKNAME = 'VINCULAR DOCUMENTO';
-const RESPONSABLE = 'fguerendiain33@gmail.com';
+const RESPONSABLE = 'franco.javier.guerendiain@everis.com';
 let response;
 function run(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -36,12 +36,12 @@ function run(req, res) {
         let queryBuscaJiraTrans = 'BISADE-69361';
         //ARRAY DE PROMESAS CON LAS CONSULTAS A LOS SERVICIOS NECESARIAS PARA LA TAREA
         let querys = [
-            yield bbdd.BBDDData(queryString).catch((err) => logger.awaitAsyncErrorHandler(err)),
-            yield bbdd.BBDDData(queryString1).catch((err) => logger.awaitAsyncErrorHandler(err)),
-            yield gpservices.getParticipantesExpediente(idExpTad).catch((err) => logger.awaitAsyncErrorHandler(err)),
-            yield pdiservices.getCalleDireccionValidas(direccion[0], direccion[1]).catch((err) => logger.awaitAsyncErrorHandler(err)),
-            yield jiraservices.getJiraByText(queryBuscaJira).catch((err) => logger.awaitAsyncErrorHandler(err)),
-            yield jiraservices.getTransicionJira(queryBuscaJiraTrans).catch((err) => logger.awaitAsyncErrorHandler(err))
+            yield bbdd.BBDDData(queryString).catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; }),
+            yield bbdd.BBDDData(queryString1).catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; }),
+            yield gpservices.getParticipantesExpediente(idExpTad).catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; }),
+            yield pdiservices.getCalleDireccionValidas(direccion[0], direccion[1]).catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; }),
+            yield jiraservices.getJiraByText(queryBuscaJira).catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; }),
+            yield jiraservices.getTransicionJira(queryBuscaJiraTrans).catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; }),
         ];
         promisetools.handlePromises(querys, 'PRUEBA: Retorno de Multiples consultas a servicios', makeItHappen);
     });

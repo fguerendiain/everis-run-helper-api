@@ -1,5 +1,7 @@
 import * as resttools from '../../tools/RESTtools';
 import * as config from '../../config';
+import * as logger from '../../logger';
+
 
 const JIRACREDENTIALS = config.get("credentials").jira;
 

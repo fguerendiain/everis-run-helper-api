@@ -8,19 +8,25 @@ const util_1 = require("util");
 *param: makeItHappend - Funcion que controla la logica de la tarea en que llama al metodo
 */
 function handlePromises(queryArray, endMessage, makeItHappen) {
-    let jsonResponseArray = { "response": [] };
+    let jsonResponseArray = []; // = { "response": [] };
     Promise.all(queryArray)
         .then((results) => {
-        for (let i = 0; i < results.length; i++) {
-            if (util_1.isNullOrUndefined(results[i])) {
-                logger.error('PROMISE', 'response [' + results[i] + ']');
+        if (!util_1.isNullOrUndefined(results)) {
+            for (let i = 0; i < results.length; i++) {
+                if (util_1.isNullOrUndefined(results[i])) {
+                    logger.error('PROMISE', 'response [' + results[i] + ']');
+                }
+                else {
+                    jsonResponseArray.push(results[i]);
+                }
             }
-            else {
-                jsonResponseArray.response.push(results[i]);
-            }
+            logger.info("PROMISE", endMessage);
+            makeItHappen(jsonResponseArray);
         }
-        logger.info("PROMISE", endMessage);
-        makeItHappen(jsonResponseArray.response);
+    })
+        .catch((err) => {
+        logger.info("PROMISE", err);
+        makeItHappen(undefined);
     });
 }
 exports.handlePromises = handlePromises;

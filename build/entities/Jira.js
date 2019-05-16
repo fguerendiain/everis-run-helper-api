@@ -10,22 +10,51 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const jiraservices = require("../externalServices/RESTService/JIRAService");
 const Ticket_1 = require("./Ticket");
+const logger = require("../logger");
 class Jira extends Ticket_1.ticket {
     constructor() {
         super();
     }
-    jiraFillTicketCreator(v_id) {
+    jiraFillTicketCreator(v_id, v_summary, v_description, v_issuetype, v_status, v_priority, v_reporter) {
         return __awaiter(this, void 0, void 0, function* () {
-            let jiraData = yield jiraservices.getJiraById(v_id);
-            this.setId(jiraData.key);
-            this.setSubject(jiraData.fields.summary);
-            this.setCreated(jiraData.fields.created);
-            this.setUpdated(jiraData.fields.updated);
-            this.setDescription(jiraData.fields.description);
-            this.setType(jiraData.fields.issuetype.name);
-            this.setStatus(jiraData.fields.status.name);
-            this.setPriroriry(jiraData.fields.priority.name);
-            this.setReporter(jiraData.fields.reporter.name);
+            let jiraData = yield jiraservices.getJiraById(v_id).catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; });
+            if (jiraData.errorMessages == "La solicitud no Existe") {
+                //si no existe el Jira lo creo
+                this.setId("NADA");
+                this.setSubject("NADA");
+                this.setCreated("NADA");
+                this.setUpdated("NADA");
+                this.setDescription("NADA");
+                this.setType("NADA");
+                this.setStatus("NADA");
+                this.setPriroriry("NADA");
+                this.setReporter("NADA");
+            }
+            else {
+                this.setId(jiraData.key);
+                this.setSubject(jiraData.fields.summary);
+                this.setCreated(jiraData.fields.created);
+                this.setUpdated(jiraData.fields.updated);
+                this.setDescription(jiraData.fields.description);
+                this.setType(jiraData.fields.issuetype.name);
+                this.setStatus(jiraData.fields.status.name);
+                this.setPriroriry(jiraData.fields.priority.name);
+                this.setReporter(jiraData.fields.reporter.name);
+                console.log(typeof (jiraData.fields.comment.comments.total));
+                for (let i = 0; jiraData.fields.comment.comments.total; i++) {
+                    this.comments.push({ "id": jiraData.fields.comment.comments[i].id,
+                        "assignee": jiraData.fields.comment.comments[i].author.name,
+                        "body": jiraData.fields.comment.comments[i].body,
+                        "created": jiraData.fields.comment.comments[i].created });
+                    // '{"id":"'+jiraData.fields.comment.comments[i].id+'",\
+                    // "assignee":"'+jiraData.fields.comment.comments[i].author.name+'",\
+                    // "body":"'+jiraData.fields.comment.comments[i].body+'",\
+                    // "created":"'+jiraData.fields.comment.comments[i].created+'"}'
+                    //);
+                    console.log(jiraData.fields.comment.comments);
+                }
+            }
+            ;
         });
     }
     getAssigne() {
@@ -48,6 +77,10 @@ class Jira extends Ticket_1.ticket {
     }
     settimeTrakingLogged(v_timeTrakingLogged) {
         this.timeTrakingLogged += v_timeTrakingLogged;
+    }
+    getComments() {
+        console.log(this.comments);
+        return this.comments;
     }
 }
 exports.Jira = Jira;

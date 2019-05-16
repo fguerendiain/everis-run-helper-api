@@ -1,6 +1,6 @@
 import * as jiraservices from '../externalServices/RESTService/JIRAService';
 import { ticket } from './Ticket';
-import { setPriority } from 'os';
+import * as logger from '../logger';
 
 
 export class Jira extends ticket{
@@ -15,18 +15,64 @@ export class Jira extends ticket{
         super();
     }
 
-    public async jiraFillTicketCreator(v_id){
-        let jiraData = await jiraservices.getJiraById(v_id);
+    public async jiraFillTicketCreator(
+            v_id:string, 
+            v_summary?:string,
+            v_description?:string,
+            v_issuetype?:string,
+            v_status?:string,
+            v_priority?:string,
+            v_reporter?:string
+        ){
+        let jiraData = await jiraservices.getJiraById(v_id).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined});
+        if(jiraData.errorMessages == "La solicitud no Existe") {
 
-        this.setId(jiraData.key);
-        this.setSubject(jiraData.fields.summary);
-        this.setCreated(jiraData.fields.created);
-        this.setUpdated(jiraData.fields.updated);
-        this.setDescription(jiraData.fields.description)
-        this.setType(jiraData.fields.issuetype.name);
-        this.setStatus(jiraData.fields.status.name);
-        this.setPriroriry(jiraData.fields.priority.name);
-        this.setReporter(jiraData.fields.reporter.name);
+            //si no existe el Jira lo creo
+
+            this.setId("NADA");
+            this.setSubject("NADA");
+            this.setCreated("NADA");
+            this.setUpdated("NADA");
+            this.setDescription("NADA")
+            this.setType("NADA");
+            this.setStatus("NADA");
+            this.setPriroriry("NADA");
+            this.setReporter("NADA");
+        }else{
+
+            this.setId(jiraData.key);
+            this.setSubject(jiraData.fields.summary);
+            this.setCreated(jiraData.fields.created);
+            this.setUpdated(jiraData.fields.updated);
+            this.setDescription(jiraData.fields.description)
+            this.setType(jiraData.fields.issuetype.name);
+            this.setStatus(jiraData.fields.status.name);
+            this.setPriroriry(jiraData.fields.priority.name);
+            this.setReporter(jiraData.fields.reporter.name);
+
+
+/*
+intentando traer 4 valores de los datos de cada comentario
+y cargandolos en un array del objeto
+*/
+
+
+            console.log(typeof(jiraData.fields.comment.comments.total));
+            for(let i = 0 ; jiraData.fields.comment.comments.total; i++){
+                this.comments.push(
+                    {"id": jiraData.fields.comment.comments[i].id,
+                     "assignee": jiraData.fields.comment.comments[i].author.name,
+                    "body":jiraData.fields.comment.comments[i].body,
+                    "created":jiraData.fields.comment.comments[i].created})
+
+                    // '{"id":"'+jiraData.fields.comment.comments[i].id+'",\
+                    // "assignee":"'+jiraData.fields.comment.comments[i].author.name+'",\
+                    // "body":"'+jiraData.fields.comment.comments[i].body+'",\
+                    // "created":"'+jiraData.fields.comment.comments[i].created+'"}'
+                    //);
+                    console.log(jiraData.fields.comment.comments);
+            }
+        };
     }
 
     public getAssigne(){
@@ -55,7 +101,12 @@ export class Jira extends ticket{
    
     public settimeTrakingLogged(v_timeTrakingLogged){
         this.timeTrakingLogged += v_timeTrakingLogged;
-    }    
+    }
+
+    public getComments(){
+        console.log(this.comments);
+        return this.comments;
+    }
 }
 
 

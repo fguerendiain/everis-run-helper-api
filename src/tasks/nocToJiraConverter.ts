@@ -11,7 +11,7 @@ import { Jira } from '../entities/Jira';
 // import * as gsheetservices from '../externalServices/RESTService/GSHEETService';
 
 const TASKNAME = 'NOC TO JIRA CONVERTER'
-const RESPONSABLE = 'fguerendiain33@gmail.com'
+const RESPONSABLE = 'franco.javier.guerendiain@everis.com'
 
 let response:express.Response;
 
@@ -23,20 +23,19 @@ export async function run(req: express.Request, res: express.Response){
     let serchJiraKeyWords = 'Gestion Administrativa';
 
     let querys = [
-//        await jiraservices.getJiraByText(serchJiraKeyWords).catch((err)=>logger.awaitAsyncErrorHandler(err)),
-    //    await jiraservices.getJiraById(idJira).catch((err)=>logger.awaitAsyncErrorHandler(err)),
-    //    await jiraservices.deleteJiraById(idJira).catch((err)=>logger.awaitAsyncErrorHandler(err))
-    //      await jiraservices.getTransicionJira(idJira).catch((err)=>logger.awaitAsyncErrorHandler(err))
+    //    await jiraservices.getJiraByText(serchJiraKeyWords).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined}),
+    //    await jiraservices.getJiraById(idJira).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined}),
+    //    await jiraservices.deleteJiraById(idJira).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined}),
+    //    await jiraservices.getTransicionJira(idJira).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined})
     ];
 
     let jira1 = new Jira();
     await jira1.jiraFillTicketCreator(idJira);
 
-    console.log("OBJETO JIRA "+jira1.getDescription());
+    console.log("OBJETO JIRA "+jira1.getComments());
+//    response.status(200).send(jira1.getDescription());
 
-    response.status(200).send(jira1.getDescription());
-
-//    promisetools.handlePromises(querys,'PRUEBA: Retorno de Multiples consultas a servicios',makeItHappen);
+    promisetools.handlePromises(querys,'PRUEBA: Retorno de Multiples consultas a servicios',makeItHappen);
 
 }
 

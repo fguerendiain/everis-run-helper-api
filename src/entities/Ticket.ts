@@ -51,7 +51,6 @@ export abstract class ticket{
 
     public attach:Blob[];
     public comments:{}[];
-    public comment:{}; //date,assigne,comment
 
     //getters & setters    
     public getId(){
