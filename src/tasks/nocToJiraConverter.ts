@@ -19,20 +19,29 @@ export async function run(req: express.Request, res: express.Response){
 
     response = res;    
 
-    let idJira = 'BISADE-48690';
+    let idJira = 'BISADE-69659';
     let serchJiraKeyWords = 'Gestion Administrativa';
+    let idJiraABorrar = 'BISADE-69658';
 
     let querys = [
     //    await jiraservices.getJiraByText(serchJiraKeyWords).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined}),
-    //    await jiraservices.getJiraById(idJira).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined}),
-    //    await jiraservices.deleteJiraById(idJira).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined}),
+        await jiraservices.getJiraById(idJira).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined}),
+    //    await jiraservices.deleteJiraById(idJiraABorrar).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined}),
     //    await jiraservices.getTransicionJira(idJira).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined})
     ];
 
     let jira1 = new Jira();
-    await jira1.jiraFillTicketCreator(idJira);
+    await jira1.fillInstanceByJiraId(idJira);
+    // jira1.setWorklog(3200,"PROBANDO FACU");
+    // jira1.setWorklog(2200,"PROBANDO YO");
+    // jira1.setWorklog(120,"PROBANDO JOA");
+    // jira1.setWorklog(420,"");
+    
+    // await jira1.saveInstanceOnJira();
 
-    console.log("OBJETO JIRA "+jira1.getComments());
+//    let jira2 = new Jira();
+//    let nuevoJira = await jira2.saveInstanceOnJira();
+
 //    response.status(200).send(jira1.getDescription());
 
     promisetools.handlePromises(querys,'PRUEBA: Retorno de Multiples consultas a servicios',makeItHappen);

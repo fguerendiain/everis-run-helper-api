@@ -1,43 +1,18 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const util_1 = require("util");
 /*
-OBJ Ticket:{
-    id:"",
-    subject:"",
-    created:"",
-    updated:""
-    attach:
-    type:"",
-    status:"",
-    priroriry:"",
-    reporter:"",
-    comments[]:{
-        date:"",
-        assigne:"",
-        comment:""
-    },
-}
-
-OBJ Jira:{
-    assigne:"",
-    labels:"",
-    reopenCounter:""
-    timeTrakingLogged:""
-    worklog[]:{
-        date:"",
-        assigne:"",
-        timeSpent:"",
-        comment:""
-    },
-}
-
 OBJ Noc:{
     plantilla:"",
     assigneGrupo:"",
     assigneEquipoEveris:"",
     assigneTecnico:""
 } */
-Object.defineProperty(exports, "__esModule", { value: true });
 class ticket {
+    constructor() {
+        this.comments = new Array;
+        this.attachments = new Array; //falta en jira
+    }
     //getters & setters    
     getId() {
         return this.id;
@@ -92,6 +67,30 @@ class ticket {
     }
     setDescription(v_description) {
         this.description = v_description;
+    }
+    getComments() {
+        return this.comments;
+    }
+    setComments(v_body, v_assignee, v_created, v_id) {
+        let newJsonString;
+        if (util_1.isNullOrUndefined(v_assignee)) {
+            newJsonString = {
+                "body": v_body
+            };
+        }
+        else {
+            newJsonString = { "id": v_id,
+                "assignee": v_assignee,
+                "body": v_body,
+                "created": v_created };
+        }
+        this.comments.push(newJsonString);
+    }
+    getAttachments() {
+        return this.attachments;
+    }
+    setAttachments(v_attachments) {
+        this.attachments.push(v_attachments);
     }
 }
 exports.ticket = ticket;

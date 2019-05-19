@@ -20,6 +20,7 @@ export function apiRestConsume(v_url:string, v_method:string, v_header:string, c
         options += '"method":"' + v_method + '",';
         if (!isNullOrUndefined(v_body)){
             options += '"body":' + v_body + ',';
+            options += '"json":true,';
         }
         if (!isNullOrUndefined(v_auth)){
             options += '"auth":' + v_auth + ',';
@@ -27,7 +28,7 @@ export function apiRestConsume(v_url:string, v_method:string, v_header:string, c
         options += '"headers":' + v_header;
         options += '}';
 
-        logger.info('REST','Genera consulta: '+options)
+        logger.info('REST','request: '+ options);
 
         queryApiRest(options,resolve,reject,callMethod);
 
@@ -36,25 +37,37 @@ export function apiRestConsume(v_url:string, v_method:string, v_header:string, c
 //ARMADO DE CONSULTA A SERVICIO REST
 function queryApiRest (v_options:string,resolve,reject,callMethod){
     request(JSON.parse(v_options),(err,response, body)=>{
-        if(err){
-            logger.error("REST",err);
+            if(err){
+            logger.error("REST",'Call Method: ' + callMethod + ' -  response error: ' + err);
             return reject(err);
         }else{
             if(response.statusCode != 200){
-                logger.info("REST",response.statusCode + " - " + escapeSpecialChars(JSON.stringify(body)));
-                return resolve(JSON.parse(response.body));
+                try{
+                    logger.info("REST",'response: ' + response.statusCode + " - Call Method: " + callMethod + " - " + escapeSpecialChars(JSON.stringify(response)));
+                    return resolve(JSON.parse(response));
+                }catch(err){
+                    logger.info("REST",'response: ' + response.statusCode + " - Call Method: " + callMethod + " - " + JSON.stringify(response));
+                    logger.error("REST",'Call Method: ' + callMethod + " - " + err);
+                    return resolve(response);
+                }
             }
-
-            logger.info("REST",response.statusCode + " - " + escapeSpecialChars(JSON.stringify(body)));
-            return resolve(JSON.parse(body));
+            try{
+                logger.info("REST",'response: ' + response.statusCode + " - Call Method: " + callMethod + " - " + escapeSpecialChars(JSON.stringify(response.body)));
+                return resolve(JSON.parse(response.body));
+            }catch(err){
+                logger.info("REST",'response: ' + response.statusCode + " - Call Method: " + callMethod + " - " + JSON.stringify(response));
+                logger.error("REST",'Call Method: ' + callMethod + " - " + err);
+                return resolve(response);
+        }
         }
     }).catch((err)=>{return reject(err);});
 }
 
-export function escapeSpecialChars(str:string) {
-    return str.replace(/\\r\\n/g, "")
+function escapeSpecialChars(v_string:string) {
+    return v_string.replace(/\\r\\n/g, "")
                 .replace(/:\'/g, ":")
                 .replace(/\,\\/g, ',"')
                 .replace(/\\\"/g, '"')
                 .replace(/ /g, "");
 };
+

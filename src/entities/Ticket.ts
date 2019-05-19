@@ -1,34 +1,6 @@
+import { isNullOrUndefined } from "util";
+
 /*
-OBJ Ticket:{
-	id:"",
-	subject:"",
-	created:"",
-	updated:""
-	attach:
-	type:"",
-	status:"",
-	priroriry:"",
-	reporter:"",
-	comments[]:{
-		date:"",
-		assigne:"",
-		comment:""
-	},
-}
-
-OBJ Jira:{
-	assigne:"",
-	labels:"",
-	reopenCounter:""
-	timeTrakingLogged:""
-	worklog[]:{
-		date:"",
-		assigne:"",
-		timeSpent:"",
-		comment:""
-	},
-}
-
 OBJ Noc:{
 	plantilla:"",
 	assigneGrupo:"",
@@ -39,18 +11,17 @@ OBJ Noc:{
 
 export abstract class ticket{
 
-	public id:string;
-    public subject:string;
-    public description:string;
-	public created:Date;
-	public updated:Date;
-	public type:string;
-	public status:string;
-	public priroriry:string;
-	public reporter:string;
-
-    public attach:Blob[];
-    public comments:{}[];
+	private id:string;
+    private subject:string;
+    private description:string;
+	private created:Date;
+	private updated:Date;
+	private type:string;
+	private status:string;
+	private priroriry:string;
+	private reporter:string;
+    private comments = new Array;
+    private attachments = new Array; //falta en jira
 
     //getters & setters    
     public getId(){
@@ -125,4 +96,29 @@ export abstract class ticket{
         this.description = v_description;
     }    
 
+    public getComments(){
+        return this.comments;        
+       }
+
+    public setComments(v_body:string, v_assignee?:string, v_created?:string, v_id?:string){
+        let newJsonString:{};
+        if(isNullOrUndefined(v_assignee)){
+            newJsonString = { 
+            "body" : v_body}
+        }else{
+            newJsonString = { "id" : v_id,
+            "assignee" : v_assignee,
+            "body" : v_body,
+            "created" : v_created};
+        }
+        this.comments.push(newJsonString)
+    }
+    
+    public getAttachments(){
+        return this.attachments;        
+       }
+
+    public setAttachments(v_attachments){
+        this.attachments.push(v_attachments)
+    }
 }

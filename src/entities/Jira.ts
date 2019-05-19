@@ -1,45 +1,67 @@
 import * as jiraservices from '../externalServices/RESTService/JIRAService';
 import { ticket } from './Ticket';
 import * as logger from '../logger';
+import { isNullOrUndefined } from 'util';
 
 
 export class Jira extends ticket{
 
-	assigne:string;
-	labels:string[]
-	reopenCounter:number;
-	timeTrakingLogged:number
-	worklog:{}[]; //date,assigne,timeSpent,comment
+	private assigne:string;
+    private labels = new Array;
+    private components = new Array;
+	private reopenCounter:number;
+	private timeTrakingLogged:number
+	private worklog = new Array;
 
     constructor(){
         super();
+        this.setType('COM_Bug');
+        this.setDescription('Estoy viendo si puedo crear un JIRA desde 0 sin modificacion');
+        this.setLabels("APM-SUP");
+        this.setLabels("TYPE_SOP");
     }
 
-    public async jiraFillTicketCreator(
-            v_id:string, 
-            v_summary?:string,
-            v_description?:string,
-            v_issuetype?:string,
-            v_status?:string,
-            v_priority?:string,
-            v_reporter?:string
-        ){
-        let jiraData = await jiraservices.getJiraById(v_id).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined});
-        if(jiraData.errorMessages == "La solicitud no Existe") {
 
-            //si no existe el Jira lo creo
 
-            this.setId("NADA");
-            this.setSubject("NADA");
-            this.setCreated("NADA");
-            this.setUpdated("NADA");
-            this.setDescription("NADA")
-            this.setType("NADA");
-            this.setStatus("NADA");
-            this.setPriroriry("NADA");
-            this.setReporter("NADA");
+    //Graba los datos del objeto en el servidor
+    public async saveInstanceOnJira(){
+        if(isNullOrUndefined(this.getId())){
+            //si la instancia no posee id creo un nuevo jira
+            await jiraservices.createJira(this);
         }else{
+            //modifico el existente
+            await jiraservices.modifyJira(this);
+            //grabo los comentarios nuevos
+            for(let i = 0; i < this.getComments().length; i++){
+                if(isNullOrUndefined(this.getComments()[i].id)){
+                    await jiraservices.addJiraCommentsById(this,this.getComments()[i].body)
+                }
+            }
+            //grabo los worklog nuevos
+            for(let i = 0; i < this.getWorklog().length; i++){
+                if(isNullOrUndefined(this.getWorklog()[i].id)){
+                    let v_worklog:{} = {
+                        "comment": this.getWorklog()[i].body,
+                        "timeSpentSeconds": this.getWorklog()[i].timeSpent,
+                    }
 
+                    await jiraservices.addJiraWorklogById(this,JSON.stringify(v_worklog));
+                }
+            }
+        }
+    }
+
+    //Carga una instancia del objeto con los datos provinientes del servidor
+    public async fillInstanceByJiraId(v_id:string){
+
+        let jiraData = await jiraservices.getJiraById(v_id).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined});
+        let jiraComment = await jiraservices.getJiraCommentsById(v_id).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined});
+        let jiraWorklog = await jiraservices.getJiraWorklogById(v_id).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined});
+
+        if(jiraData.errorMessages == "La solicitud no Existe") {
+            logger.error('JIRA',v_id+': La solicitud no Existe')
+            return null;
+        }else{
             this.setId(jiraData.key);
             this.setSubject(jiraData.fields.summary);
             this.setCreated(jiraData.fields.created);
@@ -47,33 +69,66 @@ export class Jira extends ticket{
             this.setDescription(jiraData.fields.description)
             this.setType(jiraData.fields.issuetype.name);
             this.setStatus(jiraData.fields.status.name);
-            this.setPriroriry(jiraData.fields.priority.name);
+            this.setPriroriry(jiraData.fields.priority.id);
             this.setReporter(jiraData.fields.reporter.name);
+            this.settimeTrakingLogged(jiraData.fields.timetracking.timeSpentSeconds);
+            this.setAssigne(jiraData.fields.assignee.name);
+            this.setReopenCounter(jiraData.fields.customfield_10304);
+            this.labels = jiraData.fields.labels;
 
-
-/*
-intentando traer 4 valores de los datos de cada comentario
-y cargandolos en un array del objeto
-*/
-
-
-            console.log(typeof(jiraData.fields.comment.comments.total));
-            for(let i = 0 ; jiraData.fields.comment.comments.total; i++){
-                this.comments.push(
-                    {"id": jiraData.fields.comment.comments[i].id,
-                     "assignee": jiraData.fields.comment.comments[i].author.name,
-                    "body":jiraData.fields.comment.comments[i].body,
-                    "created":jiraData.fields.comment.comments[i].created})
-
-                    // '{"id":"'+jiraData.fields.comment.comments[i].id+'",\
-                    // "assignee":"'+jiraData.fields.comment.comments[i].author.name+'",\
-                    // "body":"'+jiraData.fields.comment.comments[i].body+'",\
-                    // "created":"'+jiraData.fields.comment.comments[i].created+'"}'
-                    //);
-                    console.log(jiraData.fields.comment.comments);
+            //cargo el listado de components
+            for(let i = 0 ; i < jiraData.fields.components.length; i++){
+                this.setComponents(jiraData.fields.components[i].name);
             }
+
+
+            //cargo el listado de mensajes
+            for(let i = 0 ; i < jiraComment.total; i++){
+
+                let v_body = jiraComment.comments[i].body;
+                let v_assignee = jiraComment.comments[i].author.name;
+                let v_created = jiraComment.comments[i].created;
+                let v_id = jiraComment.comments[i].id;
+
+                this.setComments(v_body,v_assignee,v_created,v_id);
+            }
+
+            //cargo el listado de worklog
+            for(let i = 0 ; i < jiraWorklog.total; i++){
+                
+                let id = jiraWorklog.worklogs[i].id;
+                let assignee = jiraWorklog.worklogs[i].author.name;
+                let body = jiraWorklog.worklogs[i].comment;
+                let created = jiraWorklog.worklogs[i].created;
+                let timeSpent = jiraWorklog.worklogs[i].timeSpentSeconds;
+
+                this.setWorklog(timeSpent,assignee,body,created,id);
+            }
+
+            logger.info('JIRA','Se cargo objeto JIRA con datos de ticket: '+v_id);
         };
     }
+
+
+    //permite eliminar una lable especifica
+    public deleteLable(lableName:string){
+        for(let i=0; i < this.getLabels().length; i++){
+            if(this.getLabels()[i] == lableName){
+                this.getLabels().splice(i,1);
+            }
+        }
+    }
+
+    //permite eliminar un componente especifico
+    public deleteComponent(componentName:string){
+        for(let i=0; i < this.getComponents().length; i++){
+            if(this.getComponents()[i] == componentName){
+                this.getComponents().splice(i,1);
+            }
+        }
+    }
+
+    //getters y setters
 
     public getAssigne(){
         return this.assigne;        
@@ -87,6 +142,10 @@ y cargandolos en un array del objeto
         return this.labels;        
        }
 
+    public setLabels(v_labels){
+        this.labels.push(v_labels)
+    }
+
     public getReopenCounter(){
     return this.reopenCounter;        
     }
@@ -95,7 +154,7 @@ y cargandolos en un array del objeto
         this.reopenCounter = v_reopenCounter;
     }
 
-    public gettimeTrakingLogged(){
+    public getTimeTrakingLogged(){
         return this.timeTrakingLogged;        
        }
    
@@ -103,40 +162,38 @@ y cargandolos en un array del objeto
         this.timeTrakingLogged += v_timeTrakingLogged;
     }
 
-    public getComments(){
-        console.log(this.comments);
-        return this.comments;
+    public getComponents(){
+        return this.components;        
+       }
+   
+    public setComponents(v_components){
+        this.components.push(v_components);
+    }
+
+    public getWorklog(){
+        return this.worklog;        
+       }
+
+    public setWorklog(v_timeSpent:number, v_body?:string, v_created?:string, v_id?:string){
+    let newJsonString:{};
+    if(isNullOrUndefined(v_body)){
+        v_body = '';
+    }
+    if(isNullOrUndefined(v_id)){
+        newJsonString = { 
+            "timeSpent" : v_timeSpent,
+            "body" : v_body}
+    }else{
+        newJsonString = { 
+            "timeSpent" : v_timeSpent,
+            "body" : v_body,
+            "created" : v_created,
+            "id" : v_id}
+    }
+    this.worklog.push(newJsonString)
     }
 }
 
 
 
 
-
-/*OBJ Ticket:{
-	this. id:string;
-	this. subject:string;
-	this. created:Date;
-	this. updated:Date;
-	this. type:string;
-	this. status:Enumerator;
-	this. priroriry:Enumerator;
-	this. reporter:string;
-
-    this. attach:Blob[];
-    this. comments:Object[];
-    this. comment:{}; //date,assigne,comment	},
-}
-
-OBJ Jira:{
-	assigne:"",
-	labels:"",
-	reopenCounter:""
-	timeTrakingLogged:""
-	worklog[]:{
-		date:"",
-		assigne:"",
-		timeSpent:"",
-		comment:""
-	},
-}*/

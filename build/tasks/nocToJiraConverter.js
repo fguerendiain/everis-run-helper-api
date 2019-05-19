@@ -12,6 +12,7 @@ const logger = require("../logger");
 const util_1 = require("util");
 const promisetools = require("../tools/PromiseTools");
 const emailtools = require("../tools/EMAILTools");
+const jiraservices = require("../externalServices/RESTService/JIRAService");
 const Jira_1 = require("../entities/Jira");
 // import * as nocervices from '../externalServices/RESTService/NOCService';
 // import * as gsheetservices from '../externalServices/RESTService/GSHEETService';
@@ -21,17 +22,22 @@ let response;
 function run(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         response = res;
-        let idJira = 'BISADE-48690';
+        let idJira = 'BISADE-69659';
         let serchJiraKeyWords = 'Gestion Administrativa';
+        let idJiraABorrar = 'BISADE-69658';
         let querys = [
-        //    await jiraservices.getJiraByText(serchJiraKeyWords).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined}),
-        //    await jiraservices.getJiraById(idJira).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined}),
-        //    await jiraservices.deleteJiraById(idJira).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined}),
-        //    await jiraservices.getTransicionJira(idJira).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined})
+            //    await jiraservices.getJiraByText(serchJiraKeyWords).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined}),
+            yield jiraservices.getJiraById(idJira).catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; }),
         ];
         let jira1 = new Jira_1.Jira();
-        yield jira1.jiraFillTicketCreator(idJira);
-        console.log("OBJETO JIRA " + jira1.getComments());
+        yield jira1.fillInstanceByJiraId(idJira);
+        // jira1.setWorklog(3200,"fdalto","PROBANDO FACU");
+        // jira1.setWorklog(2200,"fguerend","PROBANDO YO");
+        // jira1.setWorklog(120,"jcaporal","PROBANDO JOA");
+        // jira1.setWorklog(420,"lparlov","");
+        // await jira1.saveInstanceOnJira();
+        //    let jira2 = new Jira();
+        //    let nuevoJira = await jira2.saveInstanceOnJira();
         //    response.status(200).send(jira1.getDescription());
         promisetools.handlePromises(querys, 'PRUEBA: Retorno de Multiples consultas a servicios', makeItHappen);
     });

@@ -51,7 +51,8 @@
 	"logs":{
 		"logsavelocation":"./logs/",
 		"logsavefilename":"everis-run-helper",
-		"logfileextension":"txt"
+		"logfileextension":"txt",
+		"printLength" : 4000
 	}
 }
 
