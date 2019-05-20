@@ -40,6 +40,14 @@
 			"user":"laparlov",
 			"password":"UmFtMG50M2FtMA=="
 		},
+		"noc":{
+			"host":"http://noc-mesa.buenosaires.gob.ar/sdpapi/request/",
+			"techniciankey" : "EBB36C09-BA57-4D84-B14A-8E1DFB4A775E",
+			"defaultFilter" : "15652_MyView",
+			"newNocUser": "Laura Parlov",
+			"newNocSite": "AV. RIVADAVIA 620"
+
+		},
 		"senderGmailAccount":{
 			"user":"everis.produccion@gmail.com",
 			"pass":"MTIzNG5vaWM="

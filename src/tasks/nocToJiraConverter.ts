@@ -7,6 +7,7 @@ import * as promisetools from '../tools/PromiseTools';
 import * as emailtools from '../tools/EMAILTools';
 import * as jiraservices from '../externalServices/RESTService/JIRAService';
 import { Jira } from '../entities/Jira';
+import { Noc } from '../entities/Noc';
 // import * as nocervices from '../externalServices/RESTService/NOCService';
 // import * as gsheetservices from '../externalServices/RESTService/GSHEETService';
 
@@ -23,6 +24,8 @@ export async function run(req: express.Request, res: express.Response){
     let serchJiraKeyWords = 'Gestion Administrativa';
     let idJiraABorrar = 'BISADE-69658';
 
+    let idNoc = '265199';
+
     let querys = [
     //    await jiraservices.getJiraByText(serchJiraKeyWords).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined}),
         await jiraservices.getJiraById(idJira).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined}),
@@ -30,12 +33,18 @@ export async function run(req: express.Request, res: express.Response){
     //    await jiraservices.getTransicionJira(idJira).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined})
     ];
 
-    let jira1 = new Jira();
-    await jira1.fillInstanceByJiraId(idJira);
-    // jira1.setWorklog(3200,"PROBANDO FACU");
-    // jira1.setWorklog(2200,"PROBANDO YO");
-    // jira1.setWorklog(120,"PROBANDO JOA");
-    // jira1.setWorklog(420,"");
+    let jira1 = new Jira(idJira);
+    await jira1.fillInstanceByJiraId();
+    let noc1 = new Noc(idNoc);
+    await noc1.fillInstanceByNocId();
+
+
+    noc1.setComments("Este es OTRO comentario soez");
+
+    console.log("DESCRIPCION DE NOC: "+JSON.stringify(noc1.getComments()));
+
+    await noc1.saveInstanceOnNoc();
+
     
     // await jira1.saveInstanceOnJira();
 

@@ -5,95 +5,95 @@ const config = require("../../config");
 const JIRACREDENTIALS = config.get("credentials").jira;
 //BUSCAR JIRAS POR ID
 function getJiraById(v_query) {
-    let url = encodeURI(JIRACREDENTIALS.host);
+    let url = JIRACREDENTIALS.host;
     let method = "GET";
     let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + '}';
-    let param = encodeURI('issue/' + v_query + '?fields&expand');
+    let param = 'issue/' + v_query + '?fields&expand';
     return resttools.apiRestConsume(url, method, headers, getJiraById.name, null, param);
 }
 exports.getJiraById = getJiraById;
 //CREAR JIRA
 function createJira(jiraInstance) {
-    let url = encodeURI(JIRACREDENTIALS.host);
+    let url = JIRACREDENTIALS.host;
     let method = "POST";
     let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + '}';
-    let param = encodeURI('issue');
-    let body = bodyFormatForCreateJira(jiraInstance);
+    let param = 'issue';
+    let body = bodyFormatForJira(jiraInstance);
     return resttools.apiRestConsume(url, method, headers, createJira.name, body, param);
 }
 exports.createJira = createJira;
 //MODIFICAR JIRA
 function modifyJira(jiraInstance) {
-    let url = encodeURI(JIRACREDENTIALS.host);
+    let url = JIRACREDENTIALS.host;
     let method = "PUT";
     let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + '}';
-    let param = encodeURI('issue/' + jiraInstance.getId());
-    let body = bodyFormatForModifyJira(jiraInstance);
+    let param = 'issue/' + jiraInstance.getId();
+    let body = bodyFormatForJira(jiraInstance);
     return resttools.apiRestConsume(url, method, headers, modifyJira.name, body, param);
 }
 exports.modifyJira = modifyJira;
 //BORRAR JIRA POR ID
 function deleteJiraById(v_query) {
-    let url = encodeURI(JIRACREDENTIALS.host);
+    let url = JIRACREDENTIALS.host;
     let method = "DELETE";
     let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + '}';
-    let param = encodeURI('issue/' + v_query + '?fields&expand');
+    let param = 'issue/' + v_query + '?fields&expand';
     return resttools.apiRestConsume(url, method, headers, deleteJiraById.name, null, param);
 }
 exports.deleteJiraById = deleteJiraById;
 //BUSCAR COMENTARIOS DE JIRA POR ID
 function getJiraCommentsById(v_query) {
-    let url = encodeURI(JIRACREDENTIALS.host);
+    let url = JIRACREDENTIALS.host;
     let method = "GET";
     let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + '}';
-    let param = encodeURI('issue/' + v_query + '/comment');
+    let param = 'issue/' + v_query + '/comment';
     return resttools.apiRestConsume(url, method, headers, getJiraCommentsById.name, null, param);
 }
 exports.getJiraCommentsById = getJiraCommentsById;
 //AGREGAR COMENTARIO A JIRA POR ID
-function addJiraCommentsById(jiraInstance, v_coment) {
-    let url = encodeURI(JIRACREDENTIALS.host);
+function addJiraCommentsById(v_id, v_coment) {
+    let url = JIRACREDENTIALS.host;
     let method = "POST";
     let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + '}';
-    let param = encodeURI('issue/' + jiraInstance.getId() + '/comment');
+    let param = 'issue/' + v_id + '/comment';
     let body = '{"body":"' + v_coment + '"}';
     return resttools.apiRestConsume(url, method, headers, addJiraCommentsById.name, body, param);
 }
 exports.addJiraCommentsById = addJiraCommentsById;
 //BUSCAR WORKLOG DE JIRA POR ID
 function getJiraWorklogById(v_query) {
-    let url = encodeURI(JIRACREDENTIALS.host);
+    let url = JIRACREDENTIALS.host;
     let method = "GET";
     let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + '}';
-    let param = encodeURI('issue/' + v_query + '/worklog');
+    let param = 'issue/' + v_query + '/worklog';
     return resttools.apiRestConsume(url, method, headers, getJiraWorklogById.name, null, param);
 }
 exports.getJiraWorklogById = getJiraWorklogById;
 //AGREGAR WORKLOG A JIRA POR ID
-function addJiraWorklogById(jiraInstance, v_worklog) {
-    let url = encodeURI(JIRACREDENTIALS.host);
+function addJiraWorklogById(v_id, v_worklog) {
+    let url = JIRACREDENTIALS.host;
     let method = "POST";
     let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + '}';
-    let param = encodeURI('issue/' + jiraInstance.getId() + '/worklog');
+    let param = 'issue/' + v_id + '/worklog';
     let body = v_worklog;
     return resttools.apiRestConsume(url, method, headers, addJiraWorklogById.name, body, param);
 }
 exports.addJiraWorklogById = addJiraWorklogById;
 //BUSCAR JIRA POR QUERY
 function getJiraByText(v_query) {
-    let url = encodeURI(JIRACREDENTIALS.host);
+    let url = JIRACREDENTIALS.host;
     let method = "GET";
     let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + '}';
-    let param = encodeURI('search?jql=text ~ "' + v_query + '"');
+    let param = 'search?jql=text ~ "' + v_query + '"';
     return resttools.apiRestConsume(url, method, headers, getJiraByText.name, null, param);
 }
 exports.getJiraByText = getJiraByText;
 //OBTENER TRANSICION DE JIRA
 function getTransicionJira(v_query) {
-    let url = encodeURI(JIRACREDENTIALS.host);
+    let url = JIRACREDENTIALS.host;
     let method = "GET";
     let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + '}';
-    let param = encodeURI('issue/' + v_query + '/transitions?expand=transitions.fields');
+    let param = 'issue/' + v_query + '/transitions?expand=transitions.fields';
     return resttools.apiRestConsume(url, method, headers, getTransicionJira.name, null, param);
 }
 exports.getTransicionJira = getTransicionJira;
@@ -101,7 +101,7 @@ function authConverter() {
     let convert = '"Basic ' + Buffer.from(JIRACREDENTIALS.user + ':' + config.passDecoder(JIRACREDENTIALS.password)).toString("base64") + '"';
     return '"Authorization":' + convert;
 }
-function bodyFormatForModifyJira(v_JiraObject) {
+function bodyFormatForJira(v_JiraObject) {
     let body = {
         "fields": {
             "summary": v_JiraObject.getSubject(),
@@ -129,53 +129,11 @@ function bodyFormatForModifyJira(v_JiraObject) {
     };
     return JSON.stringify(body);
 }
-function bodyFormatForCreateJira(v_JiraObject) {
-    let body = {
-        "fields": {
-            "summary": v_JiraObject.getSubject(),
-            "issuetype": {
-                "name": v_JiraObject.getType()
-            },
-            "components": componentBuilder(v_JiraObject),
-            "versions": [
-                {
-                    "id": "111917"
-                }
-            ],
-            "project": {
-                "key": "BISADE"
-            },
-            "description": v_JiraObject.getDescription(),
-            "assignee": {
-                "name": v_JiraObject.getAssigne()
-            },
-            "priority": {
-                "id": "4"
-            },
-            "labels": v_JiraObject.getLabels()
-        }
-    };
-    return JSON.stringify(body);
-}
 function componentBuilder(v_JiraObject) {
     let formatedComponents = new Array;
     for (let i = 0; i < v_JiraObject.getComponents().length; i++) {
         formatedComponents.push({ "name": v_JiraObject.getComponents()[i] });
     }
     return formatedComponents;
-}
-function commentBuilder(v_JiraObject) {
-    let formatedComments = new Array;
-    for (let i = 0; i < v_JiraObject.getComments().length; i++) {
-        formatedComments.push({ "body": v_JiraObject.getComments()[i] });
-    }
-    return formatedComments;
-}
-function worklogBuilder(v_JiraObject) {
-    let formatedWorklog = new Array;
-    for (let i = 0; i < v_JiraObject.getWorklog().length; i++) {
-        formatedWorklog.push({ "body": v_JiraObject.getWorklog()[i] });
-    }
-    return formatedWorklog;
 }
 //# sourceMappingURL=JIRAService.js.map

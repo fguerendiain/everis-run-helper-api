@@ -14,6 +14,7 @@ const promisetools = require("../tools/PromiseTools");
 const emailtools = require("../tools/EMAILTools");
 const jiraservices = require("../externalServices/RESTService/JIRAService");
 const Jira_1 = require("../entities/Jira");
+const Noc_1 = require("../entities/Noc");
 // import * as nocervices from '../externalServices/RESTService/NOCService';
 // import * as gsheetservices from '../externalServices/RESTService/GSHEETService';
 const TASKNAME = 'NOC TO JIRA CONVERTER';
@@ -25,16 +26,18 @@ function run(req, res) {
         let idJira = 'BISADE-69659';
         let serchJiraKeyWords = 'Gestion Administrativa';
         let idJiraABorrar = 'BISADE-69658';
+        let idNoc = '265199';
         let querys = [
             //    await jiraservices.getJiraByText(serchJiraKeyWords).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined}),
             yield jiraservices.getJiraById(idJira).catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; }),
         ];
-        let jira1 = new Jira_1.Jira();
-        yield jira1.fillInstanceByJiraId(idJira);
-        // jira1.setWorklog(3200,"fdalto","PROBANDO FACU");
-        // jira1.setWorklog(2200,"fguerend","PROBANDO YO");
-        // jira1.setWorklog(120,"jcaporal","PROBANDO JOA");
-        // jira1.setWorklog(420,"lparlov","");
+        let jira1 = new Jira_1.Jira(idJira);
+        yield jira1.fillInstanceByJiraId();
+        let noc1 = new Noc_1.Noc(idNoc);
+        yield noc1.fillInstanceByNocId();
+        noc1.setComments("Este es OTRO comentario soez");
+        console.log("DESCRIPCION DE NOC: " + JSON.stringify(noc1.getComments()));
+        yield noc1.saveInstanceOnNoc();
         // await jira1.saveInstanceOnJira();
         //    let jira2 = new Jira();
         //    let nuevoJira = await jira2.saveInstanceOnJira();
