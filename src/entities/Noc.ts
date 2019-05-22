@@ -43,7 +43,7 @@ export class Noc extends ticket{
     public async fillInstanceByNocId(){
 
         let nocData = await nocservices.getNocById(this.getId()).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined});
-        let nocComment = await nocservices.getNocCommentsById(this.getId()).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined});
+        let nocComment:{}[] = ((await nocservices.getNocCommentsById(this.getId()).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined})).operation.Details);
 
         if(nocData.hasOwnProperty('result')){
             if(nocData.operation.result.message == "Invalid requestID in given URL"){
@@ -68,17 +68,20 @@ export class Noc extends ticket{
 
 
             //cargo el listado de mensajes
-            for(let i = 0 ; i < nocComment.operation.Details.lenght; i++){
+            if(!isNullOrUndefined(nocComment)){
+                for(let i = 0 ; i < nocComment.length; i++){
 
-                let v_body = nocComment.operation.Details[i].NOTESTEXT; //ok
-                let v_assignee = nocComment.operation.Details[i].USERNAME; //ok
-                let v_created = nocComment.operation.Details[i].NOTESDATE; //ok
-                let v_commentId = nocComment.operation.Details[i].notesid; //ok
+                    let v_body = nocComment[i]['NOTESTEXT']; //ok
+                    let v_assignee = nocComment[i]['USERNAME']; //ok
+                    let v_created = nocComment[i]['NOTESDATE']; //ok
+                    let v_commentId = nocComment[i]['notesid']; //ok
 
-                this.setComments(v_body,v_assignee,v_created,v_commentId);
+                    this.setComments(v_body,v_assignee,v_created,v_commentId);
+                }
             }
 
             logger.info('NOC','Se cargo objeto NOC con datos de ticket: '+this.getId());
+            return this;
         };
     }
 

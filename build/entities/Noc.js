@@ -43,7 +43,7 @@ class Noc extends Ticket_1.ticket {
     fillInstanceByNocId() {
         return __awaiter(this, void 0, void 0, function* () {
             let nocData = yield nocservices.getNocById(this.getId()).catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; });
-            let nocComment = yield nocservices.getNocCommentsById(this.getId()).catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; });
+            let nocComment = ((yield nocservices.getNocCommentsById(this.getId()).catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; })).operation.Details);
             if (nocData.hasOwnProperty('result')) {
                 if (nocData.operation.result.message == "Invalid requestID in given URL") {
                     logger.error('NOC', this.getId() + ': La solicitud no Existe');
@@ -66,14 +66,17 @@ class Noc extends Ticket_1.ticket {
                 this.setSubCategoria(nocData.SUBCATEGORY);
                 this.setPlantilla(nocData.REQUESTTEMPLATE);
                 //cargo el listado de mensajes
-                for (let i = 0; i < nocComment.operation.Details.lenght; i++) {
-                    let v_body = nocComment.operation.Details[i].NOTESTEXT; //ok
-                    let v_assignee = nocComment.operation.Details[i].USERNAME; //ok
-                    let v_created = nocComment.operation.Details[i].NOTESDATE; //ok
-                    let v_commentId = nocComment.operation.Details[i].notesid; //ok
-                    this.setComments(v_body, v_assignee, v_created, v_commentId);
+                if (!util_1.isNullOrUndefined(nocComment)) {
+                    for (let i = 0; i < nocComment.length; i++) {
+                        let v_body = nocComment[i]['NOTESTEXT']; //ok
+                        let v_assignee = nocComment[i]['USERNAME']; //ok
+                        let v_created = nocComment[i]['NOTESDATE']; //ok
+                        let v_commentId = nocComment[i]['notesid']; //ok
+                        this.setComments(v_body, v_assignee, v_created, v_commentId);
+                    }
                 }
                 logger.info('NOC', 'Se cargo objeto NOC con datos de ticket: ' + this.getId());
+                return this;
             }
             ;
         });

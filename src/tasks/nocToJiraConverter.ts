@@ -38,6 +38,9 @@ export async function run(req: express.Request, res: express.Response){
     let noc1 = new Noc(idNoc);
     await noc1.fillInstanceByNocId();
 
+    jira1.setWorklog(2000,'fguerend',"estoy cargando");
+
+
 
     noc1.setComments("Este es OTRO comentario soez");
 

@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "everis-run-helper",
+  "private_key_id": "bd31067181d1995c4d1b4b32983453f43669fc44",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCx5JQy280OvS+H\nx75gCmfU1GzFVgcPLwKcq2hTV8XnjK1lsIqUoqGFvqOSnVAMxC3YQKHQKlgW9cZU\n3DRNAdd2cOJS0AEWglfgm0CpKe/JIVhT5+FVUfDHeQKF2vF73lSVTYoFNGa0sfsF\necmsYDEo0YMLNN8of3WrwKH8uzrCJ2fdR/IFbmgmx+IxNWTdaDPOaRXdAfI2ZFNR\nOVYUsZA7Z0Z4AQyoGRnCYlo9pzsDKr5PpX77pk1Mre3/0qcHKDKOoyPqLdZVKoCz\np576Er0JLsnXZK+V6Wxi86hjA8CG9RExXl8OOJ1LWrkWz4l9O6J6VH75J5lmjZOo\n12FPgeyxAgMBAAECggEAER8X6GvhU5l/zp4PQ6fHZeOVcx9xidOTeR1s6sCYP/ij\n48ABxoZ/Qfke6IiS4M0CQJMP6pIjbP+guXWBjyaDOgIUC7ZmCb2Sfv/8/DXDag9M\nigmCVYzlE2h2hrLo6mwepfQS5FIDz0EQu5kvgOi33TQ1BvTCxF9oJZdiaom2q7hS\nsILDwAjZ6cklGOwdtz5bOtsltg9y1pDxBRikUCljR611HKrbZZpeSKVKORNzL9Kv\nfMwlo5m1iAPuqNqO9SCWR5ipZbh3yrzIOGcJCSOg7jNfPKTb30z48lJzVLiy5iG8\nYNBrTR8THFUtIbPY4gEDHHQehv3UeAmqdbT0aiXI1QKBgQDlfmtdGDIYnJqJYhKn\nPrLs2J27drJiBcV/0bbwlGEFeMHcYX8wMUveRTZL1iUZ+l4dyOmccabWwExqYK5E\nJ00r0FZjzteVgJmCw1YGHG8ga+Jg37oUeOLwG+r0cC7skMH1Rbj1ft2SADeFZnih\nlADjzpZ5sDyA6PcrNmclNxkXgwKBgQDGcHGdYGuDh/FMcPttkhi7rO2SHXr3ga28\n4/H5/4WVOo9bomgnh1RcF5OmPzvTAR7M1vId1MvjFdNGafBuTiUbAGp/91RaG1Z4\nJdc2xulLV5Ljq55ox+WPgMjcyL4yV+5PNjk4XKYolGjotIi/jEr5bu+QFTYen9YU\nfMxHHe9AuwKBgQCSZb35qiiy+JvAjhaWJ/IeEuU0JDkRPNtLea249P6bbfhFLNDl\nHl1mkkJbyGTsmIGXgIY+LWYf0pYsujYQ9f1NuN6TVuzBy0KiXxeuWE8voILOB4p9\n6sviHf0ZJ8NXV9TTMUIXIXIY5BiG+eJ0OKUErdHiGOHP3k1mfJL585cHHwKBgDAI\nEYgNSZjJs99TzZfk7/WlUs+2MQhtrBb3eZ+QeM35IbAFbH585C9ySXvI/HsDX2gn\ncu1Dj6JEqyH1DIw2gAa8IAsfW5x/13s3dZM9rERfSx+ub6ZfFDKa8oN2V4sp+3XS\n4yDAVDuoSIhjAmKS26bqcjQG3lWlTJUi6/MezMV3AoGAXbTThQBBi9XLmvmCsV4v\nLyI/vWVm+RhmauCE8EJlrEA3ix6hvLgPhNEoB1nD6tNJr2vDB+4wfc4yYnWXPAiZ\nuwladuOsvrO73NlaxuE9th7gRrQ551MJ/t6zafOY0KtnpSJQ/RS/wJ6Natf6weIa\nLWNJkmBRMNziKEvqcU/Riq0=\n-----END PRIVATE KEY-----\n",
+  "client_email": "everis-run-helper@everis-run-helper.iam.gserviceaccount.com",
+  "client_id": "109231323685735882663",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/everis-run-helper%40everis-run-helper.iam.gserviceaccount.com"
+}

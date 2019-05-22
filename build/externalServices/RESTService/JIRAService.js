@@ -79,7 +79,7 @@ function addJiraWorklogById(v_id, v_worklog) {
     return resttools.apiRestConsume(url, method, headers, addJiraWorklogById.name, body, param);
 }
 exports.addJiraWorklogById = addJiraWorklogById;
-//BUSCAR JIRA POR QUERY
+//BUSCAR JIRA POR TEXTO
 function getJiraByText(v_query) {
     let url = JIRACREDENTIALS.host;
     let method = "GET";
@@ -88,6 +88,15 @@ function getJiraByText(v_query) {
     return resttools.apiRestConsume(url, method, headers, getJiraByText.name, null, param);
 }
 exports.getJiraByText = getJiraByText;
+//BUSCAR JIRA POR QUERY
+function getJiraByJql(v_query) {
+    let url = JIRACREDENTIALS.host;
+    let method = "GET";
+    let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + '}';
+    let param = 'search?jql=' + v_query;
+    return resttools.apiRestConsume(url, method, headers, getJiraByJql.name, null, param);
+}
+exports.getJiraByJql = getJiraByJql;
 //OBTENER TRANSICION DE JIRA
 function getTransicionJira(v_query) {
     let url = JIRACREDENTIALS.host;

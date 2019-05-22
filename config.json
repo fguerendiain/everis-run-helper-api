@@ -33,6 +33,13 @@
 			"connectString":"7.217.8.215/TRACKTESTBD.GCABA.EVERIS.INT"
 		}
 	},
+	"bbddpostgres":{
+            "user": "postgres",
+            "host": "localhost:5432",
+            "database": "everis-run-helper",
+            "password": "TWFtdTIyMDc=",
+            "port": 5432
+	},
 
 	"credentials":{
 		"jira":{
@@ -41,7 +48,7 @@
 			"password":"UmFtMG50M2FtMA=="
 		},
 		"noc":{
-			"host":"http://noc-mesa.buenosaires.gob.ar/sdpapi/request/",
+			"host":"http://noc-mesa.buenosaires.gob.ar/sdpapi/request",
 			"techniciankey" : "EBB36C09-BA57-4D84-B14A-8E1DFB4A775E",
 			"defaultFilter" : "15652_MyView",
 			"newNocUser": "Laura Parlov",

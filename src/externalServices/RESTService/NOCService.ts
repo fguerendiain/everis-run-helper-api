@@ -19,7 +19,7 @@ const NOCCREDENTIALS = config.get('credentials').noc;
         let url = NOCCREDENTIALS.host;
         let method = "POST";
         let headers = '{"Content-Type":"application/json","Accept":"application/json"}';
-        let param = nocInstance.getId()+'?'+nocRequestParamsGet("EDIT_REQUEST",'xml')+nocRequestParamsNocCreator(nocInstance);
+        let param = '/'+nocInstance.getId()+'?'+nocRequestParamsGet("EDIT_REQUEST",'xml')+nocRequestParamsNocCreator(nocInstance);
         return resttools.apiRestConsume(url,method,null,modifyNoc.name,null,param);
     }
 
@@ -29,7 +29,7 @@ const NOCCREDENTIALS = config.get('credentials').noc;
         let url = NOCCREDENTIALS.host;
         let method = "GET";
         let headers = '{"Content-Type":"application/json","Accept":"application/json"}';
-        let param = v_id+'?'+nocRequestParamsGet("GET_REQUEST",'json');
+        let param = '/'+v_id+'?'+nocRequestParamsGet("GET_REQUEST",'json');
         return resttools.apiRestConsume(url,method,null,getNocById.name,null,param);
     }
 
@@ -41,7 +41,7 @@ const NOCCREDENTIALS = config.get('credentials').noc;
         let url = NOCCREDENTIALS.host;
         let method = "GET";
         let headers = '{"Content-Type":"application/json","Accept":"application/json"}';
-        let param = '?'+nocRequestParamsGet("GET_REQUEST",'json',v_filter);
+        let param = '?'+nocRequestParamsGet("GET_REQUESTS",'json',v_filter);
         return resttools.apiRestConsume(url,method,null,getNocByFilter.name,null,param);
     }
 
@@ -50,7 +50,7 @@ const NOCCREDENTIALS = config.get('credentials').noc;
         let url = NOCCREDENTIALS.host;
         let method = "GET";
         let headers = '{"Content-Type":"application/json","Accept":"application/json"}';
-        let param = v_id+'/notes?'+nocRequestParamsGet("GET_NOTES",'json');
+        let param = '/'+v_id+'/notes?'+nocRequestParamsGet("GET_NOTES",'json');
         return resttools.apiRestConsume(url,method,null,getNocCommentsById.name,null,param);
     }
 
@@ -60,7 +60,7 @@ const NOCCREDENTIALS = config.get('credentials').noc;
         let url = NOCCREDENTIALS.host;
         let method = "POST";
         let headers = '{"Content-Type":"application/json","Accept":"application/json"}';
-        let param = v_id+'/notes?'+nocRequestParamsGet("ADD_NOTE",'xml')+nocRequestParamsCommentCreator(v_coment);
+        let param = '/'+v_id+'/notes?'+nocRequestParamsGet("ADD_NOTE",'xml')+nocRequestParamsCommentCreator(v_coment);
         return resttools.apiRestConsume(url,method,null,addNocCommentsById.name,null,param);
     }
 
@@ -76,7 +76,7 @@ const NOCCREDENTIALS = config.get('credentials').noc;
         let format:string = '&format='+v_format;
         let filter:string = '';
         if(!isNullOrUndefined(v_filter)){
-            filter = '&INPUT_DATA={"operation": {"details": {"from": "0","limit": "50","filterby": "'+v_filter+'"}}}';
+            filter = '&INPUT_DATA={"operation": {"details": {"from": "0","limit": "100","filterby": "'+v_filter+'"}}}';
         }
         return operationName + technicianKey + format + filter;
     }

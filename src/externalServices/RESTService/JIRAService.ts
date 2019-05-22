@@ -85,7 +85,7 @@ const JIRACREDENTIALS = config.get("credentials").jira;
         return resttools.apiRestConsume(url,method,headers,addJiraWorklogById.name,body,param);
     }
 
-    //BUSCAR JIRA POR QUERY
+    //BUSCAR JIRA POR TEXTO
     export function getJiraByText(v_query:string){
         let url = JIRACREDENTIALS.host;
         let method = "GET";
@@ -94,6 +94,14 @@ const JIRACREDENTIALS = config.get("credentials").jira;
         return resttools.apiRestConsume(url,method,headers,getJiraByText.name,null,param);
     }
 
+    //BUSCAR JIRA POR QUERY
+    export function getJiraByJql(v_query:string){
+        let url = JIRACREDENTIALS.host;
+        let method = "GET";
+        let headers = '{"Content-Type":"application/json","Accept":"application/json",'+authConverter()+'}';
+        let param = 'search?jql='+v_query;
+        return resttools.apiRestConsume(url,method,headers,getJiraByJql.name,null,param);
+    }
 
 
     //OBTENER TRANSICION DE JIRA

@@ -35,6 +35,7 @@ function run(req, res) {
         yield jira1.fillInstanceByJiraId();
         let noc1 = new Noc_1.Noc(idNoc);
         yield noc1.fillInstanceByNocId();
+        jira1.setWorklog(2000, 'fguerend', "estoy cargando");
         noc1.setComments("Este es OTRO comentario soez");
         console.log("DESCRIPCION DE NOC: " + JSON.stringify(noc1.getComments()));
         yield noc1.saveInstanceOnNoc();
