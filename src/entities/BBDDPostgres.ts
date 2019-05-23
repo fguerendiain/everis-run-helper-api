@@ -10,31 +10,36 @@ export class BBDDconect{
 
     constructor(){
         let connectionData = {
-            user: BBDDCREDENTIALS.user,
-            host: BBDDCREDENTIALS.host,
-            database: BBDDCREDENTIALS.database,
-            password: config.passDecoder(BBDDCREDENTIALS.password),
-            port: 5432,
+            "user": BBDDCREDENTIALS.user,
+            "host": BBDDCREDENTIALS.host,
+            "database": BBDDCREDENTIALS.database,
+            "password": config.passDecoder(BBDDCREDENTIALS.password),
+            "port": BBDDCREDENTIALS.port,
           }
-          const client = new Client(connectionData)
-          this.client = client.connect()
+
+          this.client = new Client(connectionData);
+          this.client.connect();
     }
 
     public query(v_query:string){
         return new Promise((resolve,reject)=>{
             this.client.query(v_query)
             .then(response => {
-                logger.info('BBDD',response.rows);
-                this.client.end();
+                logger.info('BBDD',JSON.stringify(response));
                 resolve(response.rows);
             })
             .catch(err => {
-                logger.error('BBDD',err);
-                this.client.end();
+                logger.error('BBDD',err+' - Coneccion cerrada');
+                this.endConnection();
                 reject(err);
             })
         })
     }
+
+    public endConnection(){
+        this.client.end();
+    }
+
 } 
 
 

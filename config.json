@@ -35,7 +35,7 @@
 	},
 	"bbddpostgres":{
             "user": "postgres",
-            "host": "localhost:5432",
+            "host": "localhost",
             "database": "everis-run-helper",
             "password": "TWFtdTIyMDc=",
             "port": 5432
@@ -53,12 +53,14 @@
 			"defaultFilter" : "15652_MyView",
 			"newNocUser": "Laura Parlov",
 			"newNocSite": "AV. RIVADAVIA 620"
-
 		},
 		"senderGmailAccount":{
 			"user":"everis.produccion@gmail.com",
 			"pass":"MTIzNG5vaWM="
 		}
+	},
+	"googlesheets":{
+		"priorizadossade":"1fzw83CyWAH10ddNkZ_3TUu-eQapaGggvoA_G6hhMj0I"
 	},
 
 	"wstimeout":100000,

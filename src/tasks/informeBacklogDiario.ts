@@ -4,12 +4,10 @@ import * as logger from '../logger';
 import * as emailtools from '../tools/EMAILTools';
 import * as nocservices from '../externalServices/RESTService/NOCService';
 import * as jiraservices from '../externalServices/RESTService/JIRAService';
-import * as googlesheet from '../tools/GSHEETTools';
+import * as priorizadosupdate from '../tasks/priorizadosUpdate';
+import * as moment from 'moment';
+import * as bbddpostgres from '../entities/BBDDPostgres';
 
-
-//lau necesita registro previo de     
-// resumen.totalPendientes
-// priorizados[{todas las filas
 
 const TASKNAME = 'INFORME BACKLOG DIARIO'
 const RESPONSABLE = 'franco.javier.guerendiain@everis.com'
@@ -18,27 +16,26 @@ let response:express.Response;
 
 export async function run(req: express.Request, res: express.Response){
 	response = res;    
+
+	let date:string = moment().subtract(1, 'days').format('YYYYMMDD');
+
 	logger.taskBeginInfo(TASKNAME);
 
 
 	let nocsArray = new Array;
 	let modulesArrayAll = new Array;
 	let modulesArray = new Array;
+	let datosUltimos6DiasArray = new Array;
+
 	//contadores
 	let countBacklogPriorizadoUrgente:number = 0;
 	let countBacklogPriorizadoAlta:number = 0;
 	let countBacklogPriorizadoBaja:number = 0;
-
 	let countDistribucionModuloPrd:number = 0;
 	let countDistribucionModuloHml:number = 0;
 	let countDistribucionModuloCapa:number = 0;
 
-	let distribucionModulo:{};
-	let distribucionModuloToJSON:string;
-
-	let priorizadosPorRegistro:{};
-	let priorizadosPorRegistroToJSON:string;
-
+	let distribucionModulo = new Array();
 
 	//obtengo listado de nocs desde el servidor de noc
 	let queryNocsIdEnBandeja:{}[] = ((await nocservices.getNocByFilter().catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined})).operation.details);
@@ -60,7 +57,7 @@ export async function run(req: express.Request, res: express.Response){
 		nocsArray.push(auxNocInsatnce);
 	}
 
-	//recorro el listado de nocs para llenar contar prioridades
+	//recorro el listado de nocs para llenar contar prioridades y entornos
 	for(let i = 0; i < nocsArray.length; i++){
 		let stringSubject:string = <string>nocsArray[i].getPriroriry();
 		if(stringSubject.includes("Alta")){
@@ -84,10 +81,9 @@ export async function run(req: express.Request, res: express.Response){
 
 	//recorro el listado de modulos para contar insidencias desglozando por ambientes
 	//armo todo en un JSON como string
-	distribucionModuloToJSON = '{';
 	for(let i = 0; i < modulesArray.length; i++){
-		distribucionModuloToJSON += '"'+modulesArray[i]+'":{'
 		for(let a = 0; a < nocsArray.length; a++){
+
 			if(<string>nocsArray[a].getSubCategoria() == <string>modulesArray[i]){				
 				let stringSubject:string = <string>nocsArray[a].getSubject();
 				if(stringSubject.includes("PRD")){
@@ -101,94 +97,87 @@ export async function run(req: express.Request, res: express.Response){
 				}
 			}
 		}
-		distribucionModuloToJSON += '"prd":"'+countDistribucionModuloPrd+'",';
-		distribucionModuloToJSON += '"hml":"'+countDistribucionModuloHml+'",';
-		distribucionModuloToJSON += '"capa":"'+countDistribucionModuloCapa+'"';
-		distribucionModuloToJSON += '}'
+		let distribucionModuloToJSON = {
+			"module":modulesArray[i],
+			"prd": countDistribucionModuloPrd,
+			"hml": countDistribucionModuloHml,
+			"capa": countDistribucionModuloCapa
+		}
+
+		distribucionModulo.push(distribucionModuloToJSON);
 
 		countDistribucionModuloPrd = 0;
 		countDistribucionModuloHml = 0;
 		countDistribucionModuloCapa = 0;
-
-		if(i < modulesArray.length-1){
-			distribucionModuloToJSON += ','
-		}
 	}
-	distribucionModuloToJSON += '}';
 
 
-	//armado de listado de priorizados
+	//INSERTAR LOS DATOS EN LA BBDD	
+	let v_saveBacklogBBDDQuery:string;
+	v_saveBacklogBBDDQuery = 'INSERT INTO "BACKLOG"("FECHA","PRIORIZADO_BAJA","PRIORIZADO_ALTA","PRIORIZADO_URGENTE", "CREADAS","RESUELTAS","PRIORIZADO_PORCENTUAL_BAJA","PRIORIZADO_PORCENTUAL_ALTA",';
+	v_saveBacklogBBDDQuery += '"PRIORIZADO_PORCENTUAL_URGENTE","REABIERTOS","RESUMEN_PRIORIZADOS","RESUMEN_REPETITIVOS","RESUMEN_TOTAL_PENDIENTES","DISTRIBUCION")	VALUES (';
+	v_saveBacklogBBDDQuery += /*FECHA*/date+',';
+	v_saveBacklogBBDDQuery += /*PRIORIZADO_BAJA*/countBacklogPriorizadoBaja+',';
+	v_saveBacklogBBDDQuery += /*PRIORIZADO_ALTA*/countBacklogPriorizadoAlta+',';
+	v_saveBacklogBBDDQuery += /*PRIORIZADO_URGENTE*/countBacklogPriorizadoUrgente+','; 
+	v_saveBacklogBBDDQuery += /*CREADAS*/queryJIRACreados+',';
+	v_saveBacklogBBDDQuery += /*RESUELTAS*/queryJIRAResueltos+',';
+	v_saveBacklogBBDDQuery += /*PRIORIZADO_PORCENTUAL_BAJA*/((countBacklogPriorizadoBaja/queryNocsIdEnBandeja.length).toFixed(2))+',';
+	v_saveBacklogBBDDQuery += /*PRIORIZADO_PORCENTUAL_ALTA*/((countBacklogPriorizadoAlta/queryNocsIdEnBandeja.length).toFixed(2))+',';
+	v_saveBacklogBBDDQuery += /*PRIORIZADO_PORCENTUAL_URGENTE*/((countBacklogPriorizadoUrgente/queryNocsIdEnBandeja.length).toFixed(2))+',';
+	v_saveBacklogBBDDQuery += /*REABIERTOS*/queryJIRAReOpen+',';
+	v_saveBacklogBBDDQuery += /*RESUMEN_PRIORIZADOS*/'0,';
+	v_saveBacklogBBDDQuery += /*RESUMEN_REPETITIVOS*/quwryJIRARepetitivos+',';
+	v_saveBacklogBBDDQuery += /*RESUMEN_TOTAL_PENDIENTES*/queryNocsIdEnBandeja.length+',';
+	v_saveBacklogBBDDQuery += /*DISTRIBUCION*/"'"+JSON.stringify(distribucionModulo)+"');";
+	
 
-	let listaPriorizados;
-	listaPriorizados = await googlesheet.getPriorizados();
-
-	priorizadosPorRegistroToJSON = '{'
-	for(let i = 0; i < listaPriorizados.length; i++){
-
-		priorizadosPorRegistroToJSON += '"priorizado'+(i+1)+'":'
-		priorizadosPorRegistroToJSON += '{'
-		priorizadosPorRegistroToJSON += '"noc":"'          +(<string>listaPriorizados[i]['noc']).     replace(/"/g,'')+'",';
-		priorizadosPorRegistroToJSON += '"resumen":"'      +(<string>listaPriorizados[i]['resumen']). replace(/"/g,'')+'",';
-		priorizadosPorRegistroToJSON += '"modulo":"'       +(<string>listaPriorizados[i]['modulo']).  replace(/"/g,'')+'",';
-		priorizadosPorRegistroToJSON += '"entorno":"'	   +(<string>listaPriorizados[i]['entorno']). replace(/"/g,'')+'",';
-		priorizadosPorRegistroToJSON += '"estado":"'	   +(<string>listaPriorizados[i]['estado']).  replace(/"/g,'')+'",';
-		priorizadosPorRegistroToJSON += '"fechaCreacion":"'+(<string>listaPriorizados[i]['asignado']).replace(/"/g,'')+'"';
-		priorizadosPorRegistroToJSON += '}'
-
-		if(i < listaPriorizados.length-1){
-			priorizadosPorRegistroToJSON += ','
-		}
+	//si no existen registros de backlog para la fecha lo inserto en la BBDD
+	let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
+	let backlogExistOnBBDD = (await BBDDcheckDataBase.query('select count(*) FROM "BACKLOG" WHERE "FECHA" = '+"'"+date+"'"+';'))[0].count;
+	if(backlogExistOnBBDD == 0){
+		let BBDDinsertBacklog = new bbddpostgres.BBDDconect();
+		await BBDDinsertBacklog.query(v_saveBacklogBBDDQuery);
 	}
-	priorizadosPorRegistroToJSON += '}'
 
-	console.log(priorizadosPorRegistroToJSON);
+	//Obtengo la informacion de los campos con historial para los ultimos 6 dias
+	let BBDDBacklogLastDays = new bbddpostgres.BBDDconect()
+	let backlogLastDays:any[] = <[]>await BBDDBacklogLastDays.query('SELECT "FECHA", "CREADAS", "RESUELTAS", "PRIORIZADO_PORCENTUAL_BAJA","PRIORIZADO_PORCENTUAL_ALTA","PRIORIZADO_PORCENTUAL_URGENTE","REABIERTOS"FROM "BACKLOG" ORDER BY "FECHA" desc LIMIT 6;');
 
-	let priorizacionDia:{} = {
-		"baja": countBacklogPriorizadoBaja,
-		"alta": countBacklogPriorizadoAlta,
-		"urgente": countBacklogPriorizadoUrgente
-	};
+		//armo el JSON
+	for(let i = 0; i < backlogLastDays.length ; i++){
+		let datosUltimos6Dias:{} = {
+			"fecha": backlogLastDays[i].FECHA,
+			"reaperturas": backlogLastDays[i].REABIERTOS,
+			"creadas": backlogLastDays[i].CREADAS,
+			"resueltas": backlogLastDays[i].RESUELTAS,
+			"urgentePriorizadoPorcentaje": backlogLastDays[i].PRIORIZADO_PORCENTUAL_URGENTE,
+			"altaPriorizadoPorcentaje": backlogLastDays[i].PRIORIZADO_PORCENTUAL_ALTA,
+			"bajaPriorizadoPorcentaje": backlogLastDays[i].PRIORIZADO_PORCENTUAL_BAJA
+		};
+		datosUltimos6DiasArray.push(datosUltimos6Dias);
+	}
 
-	let creadasVsResueltasDia:{} = {
-		"creadas": queryJIRACreados,
-		"resueltas": queryJIRAResueltos
-	};
+	let priorizadosPorRegistro:any[] = await priorizadosupdate.getAllPriorizadosByDay(date);
 
-	let backlogPriorizadoPorcentaje:{} = {
-		"urgente": (countBacklogPriorizadoUrgente/queryNocsIdEnBandeja.length).toFixed(2),
-		"alta": (countBacklogPriorizadoAlta/queryNocsIdEnBandeja.length).toFixed(2),
-		"baja": (countBacklogPriorizadoBaja/queryNocsIdEnBandeja.length).toFixed(2)
-	};
-
-	let reabiertosDia:{} = {
+	let backlog:{} = {
+		"priorizacionDiaBaja": countBacklogPriorizadoBaja,
+		"priorizacionDiaAlta": countBacklogPriorizadoAlta,
+		"priorizacionDiaUrgente": countBacklogPriorizadoUrgente,
 		"reaperturas": queryJIRAReOpen,
-	}
-
-	distribucionModulo = JSON.parse(distribucionModuloToJSON);
-
-	let resumen:{} = {
-		"reaperturas": queryJIRAReOpen,
-		"priorizados": listaPriorizados.length,
+		"priorizados": priorizadosPorRegistro.length,
 		"repetitivos": quwryJIRARepetitivos,
 		"totalPendientes": queryNocsIdEnBandeja.length
 	};
 
-	priorizadosPorRegistro = JSON.parse(priorizadosPorRegistroToJSON)
 
-
+	//armo el json de la respuesta final
 	let backlogJsonResponse = {
-		priorizacionDia,
-		creadasVsResueltasDia,
-		backlogPriorizadoPorcentaje,
-		reabiertosDia,
+		backlog,
+		datosUltimos6DiasArray,
 		distribucionModulo,
-		resumen,
 		priorizadosPorRegistro
 	} 
-
-	//INSERTAR LOS DATOS EN LA BBDD	
-	//TRAER DATOS DE DIAS ANTERIORES DESDE BBDD
-	//ARMAR SERVICIO PARA EL GUARDADO CONSTANTE DE PRIORIZADOS EN LA BBDD
 
 	await response.status(200).send(backlogJsonResponse);
 

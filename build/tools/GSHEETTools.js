@@ -2,10 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const googlesheet = require("google-spreadsheet");
 const logger = require("../logger");
-function getPriorizados() {
+function getSheetRows(v_googleSheet) {
     return new Promise((resolve, reject) => {
-        let creds = require('../../everis-run-helper-bd31067181d1.json');
-        let priorizadosSadeSheet = new googlesheet('1fzw83CyWAH10ddNkZ_3TUu-eQapaGggvoA_G6hhMj0I');
+        let creds = require('../../gsheetCredentials.json');
+        let priorizadosSadeSheet = new googlesheet(v_googleSheet);
         priorizadosSadeSheet.useServiceAccountAuth(creds, function (err, resp) {
             priorizadosSadeSheet.getRows(1, function (err, rows) {
                 if (err) {
@@ -18,5 +18,5 @@ function getPriorizados() {
         });
     });
 }
-exports.getPriorizados = getPriorizados;
+exports.getSheetRows = getSheetRows;
 //# sourceMappingURL=GSHEETTools.js.map

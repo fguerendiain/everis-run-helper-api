@@ -65,6 +65,7 @@ class Noc extends Ticket_1.ticket {
                 this.setAssigneTecnico(nocData.TECHNICIAN);
                 this.setSubCategoria(nocData.SUBCATEGORY);
                 this.setPlantilla(nocData.REQUESTTEMPLATE);
+                this.setEntorno();
                 //cargo el listado de mensajes
                 if (!util_1.isNullOrUndefined(nocComment)) {
                     for (let i = 0; i < nocComment.length; i++) {
@@ -111,6 +112,24 @@ class Noc extends Ticket_1.ticket {
     }
     setSubCategoria(v_subCategoria) {
         this.subCategoria = v_subCategoria;
+    }
+    getEntorno() {
+        return this.entorno;
+    }
+    setEntorno() {
+        let stringSubject = this.getSubject();
+        if (stringSubject.includes("PRD")) {
+            this.entorno = "PRD";
+        }
+        else if (stringSubject.includes("HML")) {
+            this.entorno = "HML";
+        }
+        else if (stringSubject.includes("CAPA")) {
+            this.entorno = "CAPA";
+        }
+        else {
+            this.entorno = "PRD";
+        }
     }
 }
 exports.Noc = Noc;

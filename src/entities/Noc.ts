@@ -10,6 +10,7 @@ export class Noc extends ticket{
 	private assigneEquipoEveris:string;
     private assigneTecnico:string;
     private subCategoria:string;
+    private entorno:string;
 
     constructor(v_id?:string){
         super();
@@ -65,6 +66,7 @@ export class Noc extends ticket{
             this.setAssigneTecnico(nocData.TECHNICIAN);
             this.setSubCategoria(nocData.SUBCATEGORY);
             this.setPlantilla(nocData.REQUESTTEMPLATE);
+            this.setEntorno();
 
 
             //cargo el listado de mensajes
@@ -86,6 +88,9 @@ export class Noc extends ticket{
     }
 
     //getters y setters
+
+
+
 
     public getPlantilla(){
         return this.plantilla;        
@@ -126,4 +131,22 @@ export class Noc extends ticket{
     public setSubCategoria(v_subCategoria){
         this.subCategoria = v_subCategoria;
     }
+
+    public getEntorno(){
+        return this.entorno;        
+       }
+   
+    public setEntorno(){
+        let stringSubject:string = this.getSubject();
+        if(stringSubject.includes("PRD")){
+            this.entorno = "PRD";
+        }else if(stringSubject.includes("HML")){
+            this.entorno = "HML";
+        }else if(stringSubject.includes("CAPA")){
+            this.entorno = "CAPA";
+        }else{
+            this.entorno = "PRD";
+        }
+    }
+
 }
