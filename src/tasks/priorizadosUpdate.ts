@@ -8,10 +8,7 @@ import * as googlesheet from '../externalServices/RESTService/GSHEETService'
 const TASKNAME = 'PRIORIZADOS UPDATE'
 const RESPONSABLE = 'franco.javier.guerendiain@everis.com'
 
-let response:express.Response;
-
 export async function run(req: express.Request, res: express.Response){
-	response = res;    
 
 	let dateNow:string = moment().format('YYYYMMDD');
 
@@ -21,6 +18,7 @@ export async function run(req: express.Request, res: express.Response){
 
     
     for(let i = 0; i < listadoPriorizados.length; i++){
+
         let queryInsertPriorizados:string = 'INSERT INTO "PRIORIZADOS"("FECHA","NOC","RESUMEN","MODULO","ENTORNO","ESTADO","FECHA_CREACION")VALUES(';
         queryInsertPriorizados+= /*FECHA*/dateNow+',';
         queryInsertPriorizados+= /*NOC*/"'"+listadoPriorizados[i].noc+"',";
@@ -30,21 +28,31 @@ export async function run(req: express.Request, res: express.Response){
         queryInsertPriorizados+= /*ESTADO*/"'"+listadoPriorizados[i].estado+"',";
         queryInsertPriorizados+= /*FECHA_CREACION*/"'"+listadoPriorizados[i].fechacreacion+"');";
 
-        //si ya existe el priorizado para la fecha no lo inserta en la BBDD
-        let priorizadoExiste = (await new bbddpostgres.BBDDconect().query('SELECT count(*) FROM "PRIORIZADOS" WHERE "FECHA" = '+"'"+dateNow+"'"+' AND "NOC" = '+"'"+listadoPriorizados[i].noc+"'"+';'))[0].count;
-        if(priorizadoExiste == 0){
-            await new bbddpostgres.BBDDconect().query(queryInsertPriorizados);
+        //si el priorizado no tiene visibilidad no se inserta en base y se envia por mail
+        if(listadoPriorizados[i].entorno == 'SIN VISIBILIDAD'){
+            let mailTxt =
+            `El NOC-${listadoPriorizados[i].noc} no posee visibilidad para Everis\
+            \nhttps://noc-mesa.buenosaires.gob.ar/WorkOrder.do?woMode=viewWO&woID=${listadoPriorizados[i].noc}&&fromListView=true`;
+            await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
+        }else{
+            //si ya existe el priorizado se verifica el estado de lo contrario se inserta
+            let priorizadoExiste = (await new bbddpostgres.BBDDconect().query('SELECT count(*) FROM "PRIORIZADOS" WHERE "FECHA" = '+"'"+dateNow+"'"+' AND "NOC" = '+"'"+listadoPriorizados[i].noc+"'"+';'))[0].count;
+            if(priorizadoExiste == 0){
+                await new bbddpostgres.BBDDconect().query(queryInsertPriorizados);
+            }else{
+                let estadoExistente = (await new bbddpostgres.BBDDconect().query('SELECT "ESTADO" FROM "PRIORIZADOS" WHERE "FECHA" = '+"'"+dateNow+"'"+' AND "NOC" = '+"'"+listadoPriorizados[i].noc+"'"+';'))[0].ESTADO;
+                if(!(estadoExistente ==  listadoPriorizados[i].estado)){
+                    await new bbddpostgres.BBDDconect().query('UPDATE "PRIORIZADOS" SET "ESTADO" = '+"'"+listadoPriorizados[i].estado+"'"+'WHERE "FECHA" = '+"'"+dateNow+"'"+' AND "NOC" = '+"'"+listadoPriorizados[i].noc+"'"+';')
+                }
+            }
         }
     }
-
-
-    await response.status(200).send(listadoPriorizados);
-
-	logger.taskEndInfo(TASKNAME);
 
 	let mailTxt = 'Se cargaron priorizados a la BBDD';
 	await emailtools.sendByMail(RESPONSABLE,TASKNAME,mailTxt);
 
+    await res.status(200).send(listadoPriorizados);
+    logger.taskEndInfo(TASKNAME);
 }
 
 

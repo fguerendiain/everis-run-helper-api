@@ -81,6 +81,18 @@ const NOCCREDENTIALS = config.get('credentials').noc;
         return operationName + technicianKey + format + filter;
     }
 
+    //Arma el string con los parametros para consultas con clave Admin
+    function nocRequestParamsGetAdmin(v_operatorName:string,v_format:string,v_filter?:string){
+        let operationName:string = 'OPERATION_NAME='+v_operatorName;
+        let technicianKey:string = '&TECHNICIAN_KEY='+NOCCREDENTIALS.techniciankeyRib;
+        let format:string = '&format='+v_format;
+        let filter:string = '';
+        if(!isNullOrUndefined(v_filter)){
+            filter = '&INPUT_DATA={"operation": {"details": {"from": "0","limit": "100","filterby": "'+v_filter+'"}}}';
+        }
+        return operationName + technicianKey + format + filter;
+    }
+
     //Arma string con parametros para crear noc
     function nocRequestParamsNocCreator(nocInstance:Noc){
         let newNocData:string;

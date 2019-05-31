@@ -43,6 +43,7 @@ function run(req, res) {
         //    let jira2 = new Jira();
         //    let nuevoJira = await jira2.saveInstanceOnJira();
         //    response.status(200).send(jira1.getDescription());
+        console.log(req.url.toString());
         promisetools.handlePromises(querys, 'PRUEBA: Retorno de Multiples consultas a servicios', makeItHappen);
     });
 }

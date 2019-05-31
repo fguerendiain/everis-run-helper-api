@@ -15,10 +15,8 @@ const emailtools = require("../tools/EMAILTools");
 const googlesheet = require("../externalServices/RESTService/GSHEETService");
 const TASKNAME = 'PRIORIZADOS UPDATE';
 const RESPONSABLE = 'franco.javier.guerendiain@everis.com';
-let response;
 function run(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        response = res;
         let dateNow = moment().format('YYYYMMDD');
         logger.taskBeginInfo(TASKNAME);
         let listadoPriorizados = yield googlesheet.getPriorizados();
@@ -31,16 +29,30 @@ function run(req, res) {
             queryInsertPriorizados += /*ENTORNO*/ "'" + listadoPriorizados[i].entorno + "',";
             queryInsertPriorizados += /*ESTADO*/ "'" + listadoPriorizados[i].estado + "',";
             queryInsertPriorizados += /*FECHA_CREACION*/ "'" + listadoPriorizados[i].fechacreacion + "');";
-            //si ya existe el priorizado para la fecha no lo inserta en la BBDD
-            let priorizadoExiste = (yield new bbddpostgres.BBDDconect().query('SELECT count(*) FROM "PRIORIZADOS" WHERE "FECHA" = ' + "'" + dateNow + "'" + ' AND "NOC" = ' + "'" + listadoPriorizados[i].noc + "'" + ';'))[0].count;
-            if (priorizadoExiste == 0) {
-                yield new bbddpostgres.BBDDconect().query(queryInsertPriorizados);
+            //si el priorizado no tiene visibilidad no se inserta en base y se envia por mail
+            if (listadoPriorizados[i].entorno == 'SIN VISIBILIDAD') {
+                let mailTxt = `El NOC-${listadoPriorizados[i].noc} no posee visibilidad para Everis\
+            \nhttps://noc-mesa.buenosaires.gob.ar/WorkOrder.do?woMode=viewWO&woID=${listadoPriorizados[i].noc}&&fromListView=true`;
+                yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
+            }
+            else {
+                //si ya existe el priorizado se verifica el estado de lo contrario se inserta
+                let priorizadoExiste = (yield new bbddpostgres.BBDDconect().query('SELECT count(*) FROM "PRIORIZADOS" WHERE "FECHA" = ' + "'" + dateNow + "'" + ' AND "NOC" = ' + "'" + listadoPriorizados[i].noc + "'" + ';'))[0].count;
+                if (priorizadoExiste == 0) {
+                    yield new bbddpostgres.BBDDconect().query(queryInsertPriorizados);
+                }
+                else {
+                    let estadoExistente = (yield new bbddpostgres.BBDDconect().query('SELECT "ESTADO" FROM "PRIORIZADOS" WHERE "FECHA" = ' + "'" + dateNow + "'" + ' AND "NOC" = ' + "'" + listadoPriorizados[i].noc + "'" + ';'))[0].ESTADO;
+                    if (!(estadoExistente == listadoPriorizados[i].estado)) {
+                        yield new bbddpostgres.BBDDconect().query('UPDATE "PRIORIZADOS" SET "ESTADO" = ' + "'" + listadoPriorizados[i].estado + "'" + 'WHERE "FECHA" = ' + "'" + dateNow + "'" + ' AND "NOC" = ' + "'" + listadoPriorizados[i].noc + "'" + ';');
+                    }
+                }
             }
         }
-        yield response.status(200).send(listadoPriorizados);
-        logger.taskEndInfo(TASKNAME);
         let mailTxt = 'Se cargaron priorizados a la BBDD';
         yield emailtools.sendByMail(RESPONSABLE, TASKNAME, mailTxt);
+        yield res.status(200).send(listadoPriorizados);
+        logger.taskEndInfo(TASKNAME);
     });
 }
 exports.run = run;

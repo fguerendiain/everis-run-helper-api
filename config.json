@@ -49,6 +49,7 @@
 		},
 		"noc":{
 			"host":"http://noc-mesa.buenosaires.gob.ar/sdpapi/request",
+			"techniciankeyRib" : "6CB1598C-752B-416B-B8DA-27644C3AF7EC",
 			"techniciankey" : "EBB36C09-BA57-4D84-B14A-8E1DFB4A775E",
 			"defaultFilter" : "15652_MyView",
 			"newNocUser": "Laura Parlov",
@@ -70,6 +71,9 @@
 		"logsavefilename":"everis-run-helper",
 		"logfileextension":"txt",
 		"printLength" : 4000
+	},
+	"feriados":{
+		"host" : "http://nolaborables.com.ar/api/v2/feriados"
 	}
 }
 

@@ -1,6 +1,7 @@
 import * as gsheettools from '../../tools/GSHEETTools'
 import * as config from '../../config'
 import { Noc } from '../../entities/Noc';
+import { isNullOrUndefined } from 'util';
 
 const GOOGLESHEETS = config.get('googlesheets');
 
@@ -15,9 +16,12 @@ export async function getPriorizados(){
 
     //genero un array de objetos noc
 	for(let i = 0; i < listaPriorizados.length; i++){
-		let auxNocInsatnce:Noc;
-		auxNocInsatnce = new Noc(<string>listaPriorizados[i]['noc']);
+        let auxNocInsatnce:Noc;
+		auxNocInsatnce = await new Noc(<string>listaPriorizados[i]['noc']);
         await auxNocInsatnce.fillInstanceByNocId();
+        if(isNullOrUndefined(auxNocInsatnce.getId())){
+            auxNocInsatnce.setId(<string>listaPriorizados[i]['noc']);
+        }
 		nocsArray.push(auxNocInsatnce);
 	}
 
@@ -37,7 +41,13 @@ export async function getPriorizados(){
             "estado":v_estado,
             "fechacreacion":nocsArray[i].getCreated()
         }
+/*
+        if(!(nocsArray[i].getEntorno() == 'SIN VISIBILIDAD')){
+            priorizadosPorRegistroArray.push(priorizadosPorRegistroToJSON);
+        }
+*/
         priorizadosPorRegistroArray.push(priorizadosPorRegistroToJSON);
-	}
+
+    }
     return priorizadosPorRegistroArray;
 }

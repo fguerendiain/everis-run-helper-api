@@ -11,6 +11,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const gsheettools = require("../../tools/GSHEETTools");
 const config = require("../../config");
 const Noc_1 = require("../../entities/Noc");
+const util_1 = require("util");
 const GOOGLESHEETS = config.get('googlesheets');
 function getPriorizados() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -22,8 +23,11 @@ function getPriorizados() {
         //genero un array de objetos noc
         for (let i = 0; i < listaPriorizados.length; i++) {
             let auxNocInsatnce;
-            auxNocInsatnce = new Noc_1.Noc(listaPriorizados[i]['noc']);
+            auxNocInsatnce = yield new Noc_1.Noc(listaPriorizados[i]['noc']);
             yield auxNocInsatnce.fillInstanceByNocId();
+            if (util_1.isNullOrUndefined(auxNocInsatnce.getId())) {
+                auxNocInsatnce.setId(listaPriorizados[i]['noc']);
+            }
             nocsArray.push(auxNocInsatnce);
         }
         //armo json con el listado de priorizados basado en la info de noc
@@ -43,6 +47,11 @@ function getPriorizados() {
                 "estado": v_estado,
                 "fechacreacion": nocsArray[i].getCreated()
             };
+            /*
+                    if(!(nocsArray[i].getEntorno() == 'SIN VISIBILIDAD')){
+                        priorizadosPorRegistroArray.push(priorizadosPorRegistroToJSON);
+                    }
+            */
             priorizadosPorRegistroArray.push(priorizadosPorRegistroToJSON);
         }
         return priorizadosPorRegistroArray;

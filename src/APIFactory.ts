@@ -15,8 +15,13 @@ export function build():Express{
     app.use(cors());
 
     //URLs DEFINITIVAS
-    app.get("/informeBacklogDiario", informeBacklogDiario.run);
-    app.get("/priorizadosupdate", priorizadosupdate.run);
+    app.get("/informeBacklogDiario", informeBacklogDiario.backlogDiario); //genera backlog
+    app.post("/informeBacklogDiario", informeBacklogDiario.backlogDiario); //genera backlog y guarda en BBDD local
+    app.get("/informeBacklogDiario/date/:date", informeBacklogDiario.searchBacklogByDate); //recibe una fecha para traer el backlog de ese dia en formato YYYYMMDD
+
+
+
+    app.get("/priorizadosupdate", priorizadosupdate.run); //actualiza el listado de priorizados en BBDD local
 
 
     //TEST

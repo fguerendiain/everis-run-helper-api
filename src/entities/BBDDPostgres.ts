@@ -1,5 +1,6 @@
 import * as config from '../config';
 import * as logger from '../logger';
+import { doesNotReject } from 'assert';
 const { Client } = require('pg');
 
 const BBDDCREDENTIALS = config.get('bbddpostgres');
@@ -23,15 +24,15 @@ export class BBDDconect{
 
     public query(v_query:string){
         return new Promise((resolve,reject)=>{
-            this.client.query(v_query)
-            .then(response => {
-                logger.info('BBDD',JSON.stringify(response));
-                resolve(response.rows);
-            })
-            .catch(err => {
-                logger.error('BBDD',err+' - Coneccion cerrada');
+            this.client.query(v_query,(err,resp)=>{
+                if(err){
+                    logger.error('BBDD',err+' - Coneccion cerrada');
+                    reject(err);
+                }else{
+                    logger.info('BBDD',JSON.stringify(resp));
+                    resolve(resp.rows);
+                }
                 this.endConnection();
-                reject(err);
             })
         })
     }

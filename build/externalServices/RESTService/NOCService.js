@@ -72,6 +72,17 @@ function nocRequestParamsGet(v_operatorName, v_format, v_filter) {
     }
     return operationName + technicianKey + format + filter;
 }
+//Arma el string con los parametros para consultas con clave Admin
+function nocRequestParamsGetAdmin(v_operatorName, v_format, v_filter) {
+    let operationName = 'OPERATION_NAME=' + v_operatorName;
+    let technicianKey = '&TECHNICIAN_KEY=' + NOCCREDENTIALS.techniciankeyRib;
+    let format = '&format=' + v_format;
+    let filter = '';
+    if (!util_1.isNullOrUndefined(v_filter)) {
+        filter = '&INPUT_DATA={"operation": {"details": {"from": "0","limit": "100","filterby": "' + v_filter + '"}}}';
+    }
+    return operationName + technicianKey + format + filter;
+}
 //Arma string con parametros para crear noc
 function nocRequestParamsNocCreator(nocInstance) {
     let newNocData;

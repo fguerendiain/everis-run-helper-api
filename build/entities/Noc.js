@@ -15,9 +15,6 @@ const nocservices = require("../externalServices/RESTService/NOCService");
 class Noc extends Ticket_1.ticket {
     constructor(v_id) {
         super();
-        if (util_1.isNullOrUndefined(v_id)) {
-            this.setId(null);
-        }
         this.setId(v_id);
     }
     //Graba los datos del objeto en el servidor
@@ -44,17 +41,16 @@ class Noc extends Ticket_1.ticket {
         return __awaiter(this, void 0, void 0, function* () {
             let nocData = yield nocservices.getNocById(this.getId()).catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; });
             let nocComment = ((yield nocservices.getNocCommentsById(this.getId()).catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; })).operation.Details);
-            if (nocData.hasOwnProperty('result')) {
+            if (nocData.hasOwnProperty('result') || util_1.isNullOrUndefined(nocData) || nocData.hasOwnProperty('error')) {
                 if (nocData.operation.result.message == "Invalid requestID in given URL") {
-                    logger.error('NOC', this.getId() + ': La solicitud no Existe');
+                    logger.error('NOC', this.getId() + ': La solicitud no Existe o no es visible');
                 }
-                logger.error('NOC', this.getId() + ': ' + nocData.operation.result.message);
+                logger.error('NOC', this.getId() + ': ' + nocData);
                 return null;
             }
             else {
                 this.setId(nocData.WORKORDERID);
                 this.setSubject(nocData.SUBJECT);
-                this.setCreated(nocData.CREATEDTIME);
                 this.setDescription(nocData.DESCRIPTION);
                 this.setType(nocData.REQUESTTYPE);
                 this.setStatus(nocData.STATUS);
@@ -65,6 +61,7 @@ class Noc extends Ticket_1.ticket {
                 this.setAssigneTecnico(nocData.TECHNICIAN);
                 this.setSubCategoria(nocData.SUBCATEGORY);
                 this.setPlantilla(nocData.REQUESTTEMPLATE);
+                this.formatCreateDate(nocData.CREATEDTIME);
                 this.setEntorno();
                 //cargo el listado de mensajes
                 if (!util_1.isNullOrUndefined(nocComment)) {
@@ -77,11 +74,11 @@ class Noc extends Ticket_1.ticket {
                     }
                 }
                 logger.info('NOC', 'Se cargo objeto NOC con datos de ticket: ' + this.getId());
-                return this;
             }
-            ;
+            return this;
         });
     }
+    ;
     //getters y setters
     getPlantilla() {
         return this.plantilla;
@@ -118,18 +115,36 @@ class Noc extends Ticket_1.ticket {
     }
     setEntorno() {
         let stringSubject = this.getSubject();
-        if (stringSubject.includes("PRD")) {
-            this.entorno = "PRD";
-        }
-        else if (stringSubject.includes("HML")) {
-            this.entorno = "HML";
-        }
-        else if (stringSubject.includes("CAPA")) {
-            this.entorno = "CAPA";
+        if (!util_1.isNullOrUndefined(stringSubject)) {
+            if (stringSubject.includes("PRD")) {
+                this.entorno = "PRD";
+            }
+            else if (stringSubject.includes("HML")) {
+                this.entorno = "HML";
+            }
+            else if (stringSubject.includes("CAPA")) {
+                this.entorno = "CAPA";
+            }
+            else {
+                this.entorno = "PRD";
+            }
         }
         else {
-            this.entorno = "PRD";
+            this.entorno = "SIN VISIBILIDAD";
         }
+    }
+    formatCreateDate(createTime) {
+        let formatedDate = new Date(+createTime);
+        let year = formatedDate.getFullYear().toString();
+        let month = formatedDate.getMonth().toString();
+        let day = formatedDate.getDay().toString();
+        if (month.length == 1) {
+            month = '0' + month;
+        }
+        if (day.length == 1) {
+            day = '0' + day;
+        }
+        this.setCreated(year + month + day);
     }
 }
 exports.Noc = Noc;

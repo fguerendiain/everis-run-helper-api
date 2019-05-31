@@ -16,14 +16,28 @@ const jiraservices = require("../externalServices/RESTService/JIRAService");
 const priorizadosupdate = require("../tasks/priorizadosUpdate");
 const moment = require("moment");
 const bbddpostgres = require("../entities/BBDDPostgres");
+const util_1 = require("util");
 const TASKNAME = 'INFORME BACKLOG DIARIO';
 const RESPONSABLE = 'franco.javier.guerendiain@everis.com';
-let response;
-function run(req, res) {
+//GENERAR EL INFORME DE BACKLOG
+function backlogDiario(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        response = res;
-        let date = moment().subtract(1, 'days').format('YYYYMMDD');
         logger.taskBeginInfo(TASKNAME);
+        let date = moment().subtract(1, 'days').format('YYYYMMDD');
+        let save = false;
+        //si el metodo es POST graba el backlog en la BBDD a menos que ya exista
+        if (req.method == 'POST') {
+            save = true;
+            let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
+            let backlogExistOnBBDD = (yield BBDDcheckDataBase.query('select count(*) FROM "BACKLOG" WHERE "FECHA" = ' + "'" + date + "'" + ';'))[0].count;
+            if (backlogExistOnBBDD != 0) {
+                let mailTxt = 'el backlog ya existe para la fecha indicada';
+                yield emailtools.sendByMail(RESPONSABLE, TASKNAME, mailTxt);
+                yield res.status(200).send('{"message":"' + mailTxt + '"}');
+                logger.taskEndInfo(TASKNAME);
+                return;
+            }
+        }
         let nocsArray = new Array;
         let modulesArrayAll = new Array;
         let modulesArray = new Array;
@@ -46,6 +60,41 @@ function run(req, res) {
         let queryJIRAReOpen = (yield jiraservices.getJiraByJql('project = BISADE AND issuetype = COM_Bug AND labels = APM-SUP AND status in (Open, "In Progress", Paused) AND "Reopen Counter" = "1" AND updated >= -1d AND updated <= 0d').catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; })).total;
         //Obtengo listado de JIRAS correspondientes a regulatorios repetitivos
         let quwryJIRARepetitivos = (yield jiraservices.getJiraByJql('project = BISADE AND issuetype = COM_Bug AND labels = REGULATORIO AND status in (Open, "In Progress", Paused)').catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; })).total;
+        if (util_1.isNullOrUndefined(queryNocsIdEnBandeja)) {
+            let mailTxt = 'error de servicio externo al obtener Tickets en bandeja';
+            yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
+            yield res.status(200).send('{"message":"' + mailTxt + '"}');
+            logger.taskEndInfo(TASKNAME);
+            return;
+        }
+        if (util_1.isNullOrUndefined(queryJIRACreados)) {
+            let mailTxt = 'error de servicio externo al obtener Tickets creados';
+            yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
+            yield res.status(200).send('{"message":"' + mailTxt + '"}');
+            logger.taskEndInfo(TASKNAME);
+            return;
+        }
+        if (util_1.isNullOrUndefined(queryJIRAResueltos)) {
+            let mailTxt = 'error de servicio externo al obtener Tickets resueltos';
+            yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
+            yield res.status(200).send('{"message":"' + mailTxt + '"}');
+            logger.taskEndInfo(TASKNAME);
+            return;
+        }
+        if (util_1.isNullOrUndefined(queryJIRAReOpen)) {
+            let mailTxt = 'error de servicio externo al obtener Tickets reabiertos';
+            yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
+            yield res.status(200).send('{"message":"' + mailTxt + '"}');
+            logger.taskEndInfo(TASKNAME);
+            return;
+        }
+        if (util_1.isNullOrUndefined(quwryJIRARepetitivos)) {
+            let mailTxt = 'error de servicio externo al obtener Tickets repetitivos';
+            yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
+            yield res.status(200).send('{"message":"' + mailTxt + '"}');
+            logger.taskEndInfo(TASKNAME);
+            return;
+        }
         //genero un array de objetos noc
         for (let i = 0; i < queryNocsIdEnBandeja.length; i++) {
             let auxNocInsatnce;
@@ -106,37 +155,53 @@ function run(req, res) {
             countDistribucionModuloHml = 0;
             countDistribucionModuloCapa = 0;
         }
-        //INSERTAR LOS DATOS EN LA BBDD	
-        let v_saveBacklogBBDDQuery;
-        v_saveBacklogBBDDQuery = 'INSERT INTO "BACKLOG"("FECHA","PRIORIZADO_BAJA","PRIORIZADO_ALTA","PRIORIZADO_URGENTE", "CREADAS","RESUELTAS","PRIORIZADO_PORCENTUAL_BAJA","PRIORIZADO_PORCENTUAL_ALTA",';
-        v_saveBacklogBBDDQuery += '"PRIORIZADO_PORCENTUAL_URGENTE","REABIERTOS","RESUMEN_PRIORIZADOS","RESUMEN_REPETITIVOS","RESUMEN_TOTAL_PENDIENTES","DISTRIBUCION")	VALUES (';
-        v_saveBacklogBBDDQuery += /*FECHA*/ date + ',';
-        v_saveBacklogBBDDQuery += /*PRIORIZADO_BAJA*/ countBacklogPriorizadoBaja + ',';
-        v_saveBacklogBBDDQuery += /*PRIORIZADO_ALTA*/ countBacklogPriorizadoAlta + ',';
-        v_saveBacklogBBDDQuery += /*PRIORIZADO_URGENTE*/ countBacklogPriorizadoUrgente + ',';
-        v_saveBacklogBBDDQuery += /*CREADAS*/ queryJIRACreados + ',';
-        v_saveBacklogBBDDQuery += /*RESUELTAS*/ queryJIRAResueltos + ',';
-        v_saveBacklogBBDDQuery += /*PRIORIZADO_PORCENTUAL_BAJA*/ ((countBacklogPriorizadoBaja / queryNocsIdEnBandeja.length).toFixed(2)) + ',';
-        v_saveBacklogBBDDQuery += /*PRIORIZADO_PORCENTUAL_ALTA*/ ((countBacklogPriorizadoAlta / queryNocsIdEnBandeja.length).toFixed(2)) + ',';
-        v_saveBacklogBBDDQuery += /*PRIORIZADO_PORCENTUAL_URGENTE*/ ((countBacklogPriorizadoUrgente / queryNocsIdEnBandeja.length).toFixed(2)) + ',';
-        v_saveBacklogBBDDQuery += /*REABIERTOS*/ queryJIRAReOpen + ',';
-        v_saveBacklogBBDDQuery += /*RESUMEN_PRIORIZADOS*/ '0,';
-        v_saveBacklogBBDDQuery += /*RESUMEN_REPETITIVOS*/ quwryJIRARepetitivos + ',';
-        v_saveBacklogBBDDQuery += /*RESUMEN_TOTAL_PENDIENTES*/ queryNocsIdEnBandeja.length + ',';
-        v_saveBacklogBBDDQuery += /*DISTRIBUCION*/ "'" + JSON.stringify(distribucionModulo) + "');";
-        //si no existen registros de backlog para la fecha lo inserto en la BBDD
-        let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
-        let backlogExistOnBBDD = (yield BBDDcheckDataBase.query('select count(*) FROM "BACKLOG" WHERE "FECHA" = ' + "'" + date + "'" + ';'))[0].count;
-        if (backlogExistOnBBDD == 0) {
-            let BBDDinsertBacklog = new bbddpostgres.BBDDconect();
-            yield BBDDinsertBacklog.query(v_saveBacklogBBDDQuery);
+        let priorizadosPorRegistro = yield priorizadosupdate.getAllPriorizadosByDay(date);
+        if (save) {
+            //INSERTAR LOS DATOS EN LA BBDD	
+            let v_saveBacklogBBDDQuery;
+            v_saveBacklogBBDDQuery = 'INSERT INTO "BACKLOG"("FECHA","PRIORIZADO_BAJA","PRIORIZADO_ALTA","PRIORIZADO_URGENTE", "CREADAS","RESUELTAS","PRIORIZADO_PORCENTUAL_BAJA","PRIORIZADO_PORCENTUAL_ALTA",';
+            v_saveBacklogBBDDQuery += '"PRIORIZADO_PORCENTUAL_URGENTE","REABIERTOS","RESUMEN_PRIORIZADOS","RESUMEN_REPETITIVOS","RESUMEN_TOTAL_PENDIENTES","DISTRIBUCION")	VALUES (';
+            v_saveBacklogBBDDQuery += /*FECHA*/ date + ',';
+            v_saveBacklogBBDDQuery += /*PRIORIZADO_BAJA*/ countBacklogPriorizadoBaja + ',';
+            v_saveBacklogBBDDQuery += /*PRIORIZADO_ALTA*/ countBacklogPriorizadoAlta + ',';
+            v_saveBacklogBBDDQuery += /*PRIORIZADO_URGENTE*/ countBacklogPriorizadoUrgente + ',';
+            v_saveBacklogBBDDQuery += /*CREADAS*/ queryJIRACreados + ',';
+            v_saveBacklogBBDDQuery += /*RESUELTAS*/ queryJIRAResueltos + ',';
+            v_saveBacklogBBDDQuery += /*PRIORIZADO_PORCENTUAL_BAJA*/ ((countBacklogPriorizadoBaja / queryNocsIdEnBandeja.length).toFixed(2)) + ',';
+            v_saveBacklogBBDDQuery += /*PRIORIZADO_PORCENTUAL_ALTA*/ ((countBacklogPriorizadoAlta / queryNocsIdEnBandeja.length).toFixed(2)) + ',';
+            v_saveBacklogBBDDQuery += /*PRIORIZADO_PORCENTUAL_URGENTE*/ ((countBacklogPriorizadoUrgente / queryNocsIdEnBandeja.length).toFixed(2)) + ',';
+            v_saveBacklogBBDDQuery += /*REABIERTOS*/ queryJIRAReOpen + ',';
+            v_saveBacklogBBDDQuery += /*RESUMEN_PRIORIZADOS*/ priorizadosPorRegistro.length + ',';
+            v_saveBacklogBBDDQuery += /*RESUMEN_REPETITIVOS*/ quwryJIRARepetitivos + ',';
+            v_saveBacklogBBDDQuery += /*RESUMEN_TOTAL_PENDIENTES*/ queryNocsIdEnBandeja.length + ',';
+            v_saveBacklogBBDDQuery += /*DISTRIBUCION*/ "'" + JSON.stringify(distribucionModulo) + "');";
+            //si no existen registros de backlog para la fecha lo inserto en la BBDD
+            let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
+            let backlogExistOnBBDD = (yield BBDDcheckDataBase.query('select count(*) FROM "BACKLOG" WHERE "FECHA" = ' + "'" + date + "'" + ';'))[0].count;
+            if (backlogExistOnBBDD == 0) {
+                let BBDDinsertBacklog = new bbddpostgres.BBDDconect();
+                yield BBDDinsertBacklog.query(v_saveBacklogBBDDQuery);
+            }
         }
         //Obtengo la informacion de los campos con historial para los ultimos 6 dias
         let BBDDBacklogLastDays = new bbddpostgres.BBDDconect();
         let backlogLastDays = yield BBDDBacklogLastDays.query('SELECT "FECHA", "CREADAS", "RESUELTAS", "PRIORIZADO_PORCENTUAL_BAJA","PRIORIZADO_PORCENTUAL_ALTA","PRIORIZADO_PORCENTUAL_URGENTE","REABIERTOS"FROM "BACKLOG" ORDER BY "FECHA" desc LIMIT 6;');
+        let datosUltimos6Dias;
+        if (!save) {
+            datosUltimos6Dias = {
+                "fecha": date,
+                "reaperturas": queryJIRAReOpen,
+                "creadas": queryJIRACreados,
+                "resueltas": queryJIRAResueltos,
+                "urgentePriorizadoPorcentaje": ((countBacklogPriorizadoUrgente / queryNocsIdEnBandeja.length).toFixed(2)),
+                "altaPriorizadoPorcentaje": ((countBacklogPriorizadoAlta / queryNocsIdEnBandeja.length).toFixed(2)),
+                "bajaPriorizadoPorcentaje": ((countBacklogPriorizadoBaja / queryNocsIdEnBandeja.length).toFixed(2))
+            };
+            datosUltimos6DiasArray.push(datosUltimos6Dias);
+        }
         //armo el JSON
         for (let i = 0; i < backlogLastDays.length; i++) {
-            let datosUltimos6Dias = {
+            datosUltimos6Dias = {
                 "fecha": backlogLastDays[i].FECHA,
                 "reaperturas": backlogLastDays[i].REABIERTOS,
                 "creadas": backlogLastDays[i].CREADAS,
@@ -147,7 +212,6 @@ function run(req, res) {
             };
             datosUltimos6DiasArray.push(datosUltimos6Dias);
         }
-        let priorizadosPorRegistro = yield priorizadosupdate.getAllPriorizadosByDay(date);
         let backlog = {
             "priorizacionDiaBaja": countBacklogPriorizadoBaja,
             "priorizacionDiaAlta": countBacklogPriorizadoAlta,
@@ -164,11 +228,27 @@ function run(req, res) {
             distribucionModulo,
             priorizadosPorRegistro
         };
-        yield response.status(200).send(backlogJsonResponse);
-        logger.taskEndInfo(TASKNAME);
         let mailTxt = 'Se envio Backlog Diario';
         yield emailtools.sendByMail(RESPONSABLE, TASKNAME, mailTxt);
+        yield res.status(200).send(backlogJsonResponse);
+        logger.taskEndInfo(TASKNAME);
     });
 }
-exports.run = run;
+exports.backlogDiario = backlogDiario;
+//BUSCAR DATOS DE BACKLOG POR UNA FECHA DETERMINADA
+function searchBacklogByDate(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        logger.taskBeginInfo(TASKNAME);
+        let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
+        let BacklogByDate = (yield BBDDcheckDataBase.query('select * FROM "BACKLOG" WHERE "FECHA" = ' + "'" + req.params.date + "'" + ';'));
+        let priorizadosPorRegistro = yield priorizadosupdate.getAllPriorizadosByDay(req.params.date);
+        let backlogJsonResponse = {
+            BacklogByDate,
+            priorizadosPorRegistro,
+        };
+        yield res.status(200).send(backlogJsonResponse);
+        logger.taskEndInfo(TASKNAME);
+    });
+}
+exports.searchBacklogByDate = searchBacklogByDate;
 //# sourceMappingURL=informeBacklogDiario.js.map

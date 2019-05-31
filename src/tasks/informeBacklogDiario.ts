@@ -7,20 +7,32 @@ import * as jiraservices from '../externalServices/RESTService/JIRAService';
 import * as priorizadosupdate from '../tasks/priorizadosUpdate';
 import * as moment from 'moment';
 import * as bbddpostgres from '../entities/BBDDPostgres';
+import { isNullOrUndefined } from 'util';
 
 
 const TASKNAME = 'INFORME BACKLOG DIARIO'
 const RESPONSABLE = 'franco.javier.guerendiain@everis.com'
 
-let response:express.Response;
-
-export async function run(req: express.Request, res: express.Response){
-	response = res;    
-
-	let date:string = moment().subtract(1, 'days').format('YYYYMMDD');
+//GENERAR EL INFORME DE BACKLOG
+export async function backlogDiario(req: express.Request, res: express.Response){
 
 	logger.taskBeginInfo(TASKNAME);
+	let date:string = moment().subtract(1, 'days').format('YYYYMMDD');
+	let save = false;
 
+	//si el metodo es POST graba el backlog en la BBDD a menos que ya exista
+	if(req.method == 'POST'){
+		save = true;
+		let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
+		let backlogExistOnBBDD = (await BBDDcheckDataBase.query('select count(*) FROM "BACKLOG" WHERE "FECHA" = '+"'"+date+"'"+';'))[0].count;
+		if(backlogExistOnBBDD != 0){
+			let mailTxt = 'el backlog ya existe para la fecha indicada';
+			await emailtools.sendByMail(RESPONSABLE,TASKNAME,mailTxt);
+			await res.status(200).send('{"message":"'+mailTxt+'"}');
+			logger.taskEndInfo(TASKNAME);
+			return;
+			}
+	}
 
 	let nocsArray = new Array;
 	let modulesArrayAll = new Array;
@@ -48,6 +60,41 @@ export async function run(req: express.Request, res: express.Response){
 	//Obtengo listado de JIRAS correspondientes a regulatorios repetitivos
 	let quwryJIRARepetitivos = (await jiraservices.getJiraByJql('project = BISADE AND issuetype = COM_Bug AND labels = REGULATORIO AND status in (Open, "In Progress", Paused)').catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined})).total
 
+	if(isNullOrUndefined(queryNocsIdEnBandeja)){
+		let mailTxt = 'error de servicio externo al obtener Tickets en bandeja';
+		await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
+		await res.status(200).send('{"message":"'+mailTxt+'"}');
+		logger.taskEndInfo(TASKNAME);
+		return;
+	}
+	if(isNullOrUndefined(queryJIRACreados)){
+		let mailTxt = 'error de servicio externo al obtener Tickets creados';
+		await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
+		await res.status(200).send('{"message":"'+mailTxt+'"}');
+		logger.taskEndInfo(TASKNAME);
+		return;
+	}
+	if(isNullOrUndefined(queryJIRAResueltos)){
+		let mailTxt = 'error de servicio externo al obtener Tickets resueltos';
+		await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
+		await res.status(200).send('{"message":"'+mailTxt+'"}');
+		logger.taskEndInfo(TASKNAME);
+		return;
+	}
+	if(isNullOrUndefined(queryJIRAReOpen)){
+		let mailTxt = 'error de servicio externo al obtener Tickets reabiertos';
+		await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
+		await res.status(200).send('{"message":"'+mailTxt+'"}');
+		logger.taskEndInfo(TASKNAME);
+		return;
+	}
+	if(isNullOrUndefined(quwryJIRARepetitivos)){
+		let mailTxt = 'error de servicio externo al obtener Tickets repetitivos';
+		await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
+		await res.status(200).send('{"message":"'+mailTxt+'"}');
+		logger.taskEndInfo(TASKNAME);
+		return;
+	}
 
 	//genero un array de objetos noc
 	for(let i = 0; i < queryNocsIdEnBandeja.length; i++){
@@ -111,42 +158,59 @@ export async function run(req: express.Request, res: express.Response){
 		countDistribucionModuloCapa = 0;
 	}
 
+	let priorizadosPorRegistro:any[] = await priorizadosupdate.getAllPriorizadosByDay(date);
 
-	//INSERTAR LOS DATOS EN LA BBDD	
-	let v_saveBacklogBBDDQuery:string;
-	v_saveBacklogBBDDQuery = 'INSERT INTO "BACKLOG"("FECHA","PRIORIZADO_BAJA","PRIORIZADO_ALTA","PRIORIZADO_URGENTE", "CREADAS","RESUELTAS","PRIORIZADO_PORCENTUAL_BAJA","PRIORIZADO_PORCENTUAL_ALTA",';
-	v_saveBacklogBBDDQuery += '"PRIORIZADO_PORCENTUAL_URGENTE","REABIERTOS","RESUMEN_PRIORIZADOS","RESUMEN_REPETITIVOS","RESUMEN_TOTAL_PENDIENTES","DISTRIBUCION")	VALUES (';
-	v_saveBacklogBBDDQuery += /*FECHA*/date+',';
-	v_saveBacklogBBDDQuery += /*PRIORIZADO_BAJA*/countBacklogPriorizadoBaja+',';
-	v_saveBacklogBBDDQuery += /*PRIORIZADO_ALTA*/countBacklogPriorizadoAlta+',';
-	v_saveBacklogBBDDQuery += /*PRIORIZADO_URGENTE*/countBacklogPriorizadoUrgente+','; 
-	v_saveBacklogBBDDQuery += /*CREADAS*/queryJIRACreados+',';
-	v_saveBacklogBBDDQuery += /*RESUELTAS*/queryJIRAResueltos+',';
-	v_saveBacklogBBDDQuery += /*PRIORIZADO_PORCENTUAL_BAJA*/((countBacklogPriorizadoBaja/queryNocsIdEnBandeja.length).toFixed(2))+',';
-	v_saveBacklogBBDDQuery += /*PRIORIZADO_PORCENTUAL_ALTA*/((countBacklogPriorizadoAlta/queryNocsIdEnBandeja.length).toFixed(2))+',';
-	v_saveBacklogBBDDQuery += /*PRIORIZADO_PORCENTUAL_URGENTE*/((countBacklogPriorizadoUrgente/queryNocsIdEnBandeja.length).toFixed(2))+',';
-	v_saveBacklogBBDDQuery += /*REABIERTOS*/queryJIRAReOpen+',';
-	v_saveBacklogBBDDQuery += /*RESUMEN_PRIORIZADOS*/'0,';
-	v_saveBacklogBBDDQuery += /*RESUMEN_REPETITIVOS*/quwryJIRARepetitivos+',';
-	v_saveBacklogBBDDQuery += /*RESUMEN_TOTAL_PENDIENTES*/queryNocsIdEnBandeja.length+',';
-	v_saveBacklogBBDDQuery += /*DISTRIBUCION*/"'"+JSON.stringify(distribucionModulo)+"');";
-	
+	if(save){
+		//INSERTAR LOS DATOS EN LA BBDD	
+		let v_saveBacklogBBDDQuery:string;
+		v_saveBacklogBBDDQuery = 'INSERT INTO "BACKLOG"("FECHA","PRIORIZADO_BAJA","PRIORIZADO_ALTA","PRIORIZADO_URGENTE", "CREADAS","RESUELTAS","PRIORIZADO_PORCENTUAL_BAJA","PRIORIZADO_PORCENTUAL_ALTA",';
+		v_saveBacklogBBDDQuery += '"PRIORIZADO_PORCENTUAL_URGENTE","REABIERTOS","RESUMEN_PRIORIZADOS","RESUMEN_REPETITIVOS","RESUMEN_TOTAL_PENDIENTES","DISTRIBUCION")	VALUES (';
+		v_saveBacklogBBDDQuery += /*FECHA*/date+',';
+		v_saveBacklogBBDDQuery += /*PRIORIZADO_BAJA*/countBacklogPriorizadoBaja+',';
+		v_saveBacklogBBDDQuery += /*PRIORIZADO_ALTA*/countBacklogPriorizadoAlta+',';
+		v_saveBacklogBBDDQuery += /*PRIORIZADO_URGENTE*/countBacklogPriorizadoUrgente+','; 
+		v_saveBacklogBBDDQuery += /*CREADAS*/queryJIRACreados+',';
+		v_saveBacklogBBDDQuery += /*RESUELTAS*/queryJIRAResueltos+',';
+		v_saveBacklogBBDDQuery += /*PRIORIZADO_PORCENTUAL_BAJA*/((countBacklogPriorizadoBaja/queryNocsIdEnBandeja.length).toFixed(2))+',';
+		v_saveBacklogBBDDQuery += /*PRIORIZADO_PORCENTUAL_ALTA*/((countBacklogPriorizadoAlta/queryNocsIdEnBandeja.length).toFixed(2))+',';
+		v_saveBacklogBBDDQuery += /*PRIORIZADO_PORCENTUAL_URGENTE*/((countBacklogPriorizadoUrgente/queryNocsIdEnBandeja.length).toFixed(2))+',';
+		v_saveBacklogBBDDQuery += /*REABIERTOS*/queryJIRAReOpen+',';
+		v_saveBacklogBBDDQuery += /*RESUMEN_PRIORIZADOS*/priorizadosPorRegistro.length+',';
+		v_saveBacklogBBDDQuery += /*RESUMEN_REPETITIVOS*/quwryJIRARepetitivos+',';
+		v_saveBacklogBBDDQuery += /*RESUMEN_TOTAL_PENDIENTES*/queryNocsIdEnBandeja.length+',';
+		v_saveBacklogBBDDQuery += /*DISTRIBUCION*/"'"+JSON.stringify(distribucionModulo)+"');";
+		
 
-	//si no existen registros de backlog para la fecha lo inserto en la BBDD
-	let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
-	let backlogExistOnBBDD = (await BBDDcheckDataBase.query('select count(*) FROM "BACKLOG" WHERE "FECHA" = '+"'"+date+"'"+';'))[0].count;
-	if(backlogExistOnBBDD == 0){
-		let BBDDinsertBacklog = new bbddpostgres.BBDDconect();
-		await BBDDinsertBacklog.query(v_saveBacklogBBDDQuery);
+		//si no existen registros de backlog para la fecha lo inserto en la BBDD
+		let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
+		let backlogExistOnBBDD = (await BBDDcheckDataBase.query('select count(*) FROM "BACKLOG" WHERE "FECHA" = '+"'"+date+"'"+';'))[0].count;
+		if(backlogExistOnBBDD == 0){
+			let BBDDinsertBacklog = new bbddpostgres.BBDDconect();
+			await BBDDinsertBacklog.query(v_saveBacklogBBDDQuery);
+		}
 	}
-
 	//Obtengo la informacion de los campos con historial para los ultimos 6 dias
 	let BBDDBacklogLastDays = new bbddpostgres.BBDDconect()
 	let backlogLastDays:any[] = <[]>await BBDDBacklogLastDays.query('SELECT "FECHA", "CREADAS", "RESUELTAS", "PRIORIZADO_PORCENTUAL_BAJA","PRIORIZADO_PORCENTUAL_ALTA","PRIORIZADO_PORCENTUAL_URGENTE","REABIERTOS"FROM "BACKLOG" ORDER BY "FECHA" desc LIMIT 6;');
 
-		//armo el JSON
+	let datosUltimos6Dias:{};
+
+	if(!save){
+		datosUltimos6Dias = {
+			"fecha": date,
+			"reaperturas": queryJIRAReOpen,
+			"creadas": queryJIRACreados,
+			"resueltas": queryJIRAResueltos,
+			"urgentePriorizadoPorcentaje": ((countBacklogPriorizadoUrgente/queryNocsIdEnBandeja.length).toFixed(2)),
+			"altaPriorizadoPorcentaje": ((countBacklogPriorizadoAlta/queryNocsIdEnBandeja.length).toFixed(2)),
+			"bajaPriorizadoPorcentaje": ((countBacklogPriorizadoBaja/queryNocsIdEnBandeja.length).toFixed(2))
+		};
+		datosUltimos6DiasArray.push(datosUltimos6Dias);
+	}
+
+	//armo el JSON
 	for(let i = 0; i < backlogLastDays.length ; i++){
-		let datosUltimos6Dias:{} = {
+		datosUltimos6Dias = {
 			"fecha": backlogLastDays[i].FECHA,
 			"reaperturas": backlogLastDays[i].REABIERTOS,
 			"creadas": backlogLastDays[i].CREADAS,
@@ -157,8 +221,6 @@ export async function run(req: express.Request, res: express.Response){
 		};
 		datosUltimos6DiasArray.push(datosUltimos6Dias);
 	}
-
-	let priorizadosPorRegistro:any[] = await priorizadosupdate.getAllPriorizadosByDay(date);
 
 	let backlog:{} = {
 		"priorizacionDiaBaja": countBacklogPriorizadoBaja,
@@ -179,10 +241,29 @@ export async function run(req: express.Request, res: express.Response){
 		priorizadosPorRegistro
 	} 
 
-	await response.status(200).send(backlogJsonResponse);
-
-	logger.taskEndInfo(TASKNAME);
-
 	let mailTxt = 'Se envio Backlog Diario';
 	await emailtools.sendByMail(RESPONSABLE,TASKNAME,mailTxt);
+
+	await res.status(200).send(backlogJsonResponse);
+	logger.taskEndInfo(TASKNAME);
+}
+
+
+
+
+//BUSCAR DATOS DE BACKLOG POR UNA FECHA DETERMINADA
+export async function searchBacklogByDate(req: express.Request, res: express.Response){
+	logger.taskBeginInfo(TASKNAME);
+	let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
+	let BacklogByDate = (await BBDDcheckDataBase.query('select * FROM "BACKLOG" WHERE "FECHA" = '+"'"+req.params.date+"'"+';'));
+	let priorizadosPorRegistro:any[] = await priorizadosupdate.getAllPriorizadosByDay(req.params.date);
+
+	let backlogJsonResponse = {
+		BacklogByDate,
+		priorizadosPorRegistro,
+	} 
+
+	await res.status(200).send(backlogJsonResponse);
+	logger.taskEndInfo(TASKNAME);
+
 }

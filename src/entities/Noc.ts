@@ -14,9 +14,6 @@ export class Noc extends ticket{
 
     constructor(v_id?:string){
         super();
-        if(isNullOrUndefined(v_id)){
-            this.setId(null);
-        }
         this.setId(v_id);
     }
 
@@ -46,16 +43,15 @@ export class Noc extends ticket{
         let nocData = await nocservices.getNocById(this.getId()).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined});
         let nocComment:{}[] = ((await nocservices.getNocCommentsById(this.getId()).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined})).operation.Details);
 
-        if(nocData.hasOwnProperty('result')){
+        if(nocData.hasOwnProperty('result') || isNullOrUndefined(nocData) || nocData.hasOwnProperty('error')){
             if(nocData.operation.result.message == "Invalid requestID in given URL"){
-                logger.error('NOC',this.getId()+': La solicitud no Existe');
+                logger.error('NOC',this.getId()+': La solicitud no Existe o no es visible');
             }
-                logger.error('NOC',this.getId()+': '+nocData.operation.result.message);
+                logger.error('NOC',this.getId()+': '+nocData);
             return null;
         }else{
             this.setId(nocData.WORKORDERID);
             this.setSubject(nocData.SUBJECT);
-            this.setCreated(nocData.CREATEDTIME);
             this.setDescription(nocData.DESCRIPTION)
             this.setType(nocData.REQUESTTYPE);
             this.setStatus(nocData.STATUS);
@@ -66,8 +62,8 @@ export class Noc extends ticket{
             this.setAssigneTecnico(nocData.TECHNICIAN);
             this.setSubCategoria(nocData.SUBCATEGORY);
             this.setPlantilla(nocData.REQUESTTEMPLATE);
+            this.formatCreateDate(nocData.CREATEDTIME);
             this.setEntorno();
-
 
             //cargo el listado de mensajes
             if(!isNullOrUndefined(nocComment)){
@@ -83,9 +79,9 @@ export class Noc extends ticket{
             }
 
             logger.info('NOC','Se cargo objeto NOC con datos de ticket: '+this.getId());
-            return this;
-        };
-    }
+        }
+        return this;
+    };
 
     //getters y setters
 
@@ -137,16 +133,37 @@ export class Noc extends ticket{
        }
    
     public setEntorno(){
-        let stringSubject:string = this.getSubject();
-        if(stringSubject.includes("PRD")){
-            this.entorno = "PRD";
-        }else if(stringSubject.includes("HML")){
-            this.entorno = "HML";
-        }else if(stringSubject.includes("CAPA")){
-            this.entorno = "CAPA";
+        let stringSubject:string = <string>this.getSubject();
+        if(!isNullOrUndefined(stringSubject)){
+            if(stringSubject.includes("PRD")){
+                this.entorno = "PRD";
+            }else if(stringSubject.includes("HML")){
+                this.entorno = "HML";
+            }else if(stringSubject.includes("CAPA")){
+                this.entorno = "CAPA";
+            }else{
+                this.entorno = "PRD";
+            }
         }else{
-            this.entorno = "PRD";
+            this.entorno = "SIN VISIBILIDAD";
         }
+    }
+
+
+    private formatCreateDate(createTime){
+        let formatedDate = new Date(+createTime);
+
+        let year:string = formatedDate.getFullYear().toString();
+        let month:string = formatedDate.getMonth().toString();
+        let day:string = formatedDate.getDay().toString();
+        
+        if(month.length == 1){
+            month = '0'+month;
+        } 
+        if(day.length == 1){
+            day = '0'+day;
+        } 
+        this.setCreated(year+month+day);
     }
 
 }
