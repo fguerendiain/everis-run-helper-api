@@ -35,9 +35,9 @@
 	},
 	"bbddpostgres":{
             "user": "postgres",
-            "host": "localhost",
+            "host": "10.217.88.164",
             "database": "everis-run-helper",
-            "password": "TWFtdTIyMDc=",
+            "password": "RXJoYTE3MDE=",
             "port": 5432
 	},
 
@@ -45,7 +45,7 @@
 		"jira":{
 			"host":"https://steps.everis.com/jiraproy/rest/api/2/",
 			"user":"laparlov",
-			"password":"UmFtMG50M2FtMA=="
+			"password":"QW0wbGFjMG1pZGE="
 		},
 		"noc":{
 			"host":"http://noc-mesa.buenosaires.gob.ar/sdpapi/request",

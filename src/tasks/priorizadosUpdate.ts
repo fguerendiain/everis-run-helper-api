@@ -4,6 +4,7 @@ import express = require('express');
 import * as logger from '../logger';
 import * as emailtools from '../tools/EMAILTools';
 import * as googlesheet from '../externalServices/RESTService/GSHEETService'
+import { isNullOrUndefined } from 'util';
 
 const TASKNAME = 'PRIORIZADOS UPDATE'
 const RESPONSABLE = 'franco.javier.guerendiain@everis.com'
@@ -19,10 +20,15 @@ export async function run(req: express.Request, res: express.Response){
     
     for(let i = 0; i < listadoPriorizados.length; i++){
 
+        let stringResumen:string = listadoPriorizados[i].resumen;
+        if(!isNullOrUndefined(stringResumen)){
+            stringResumen = stringResumen.replace(/\'/,'´');
+        }
+
         let queryInsertPriorizados:string = 'INSERT INTO "PRIORIZADOS"("FECHA","NOC","RESUMEN","MODULO","ENTORNO","ESTADO","FECHA_CREACION")VALUES(';
         queryInsertPriorizados+= /*FECHA*/dateNow+',';
         queryInsertPriorizados+= /*NOC*/"'"+listadoPriorizados[i].noc+"',";
-        queryInsertPriorizados+= /*RESUMEN*/"'"+listadoPriorizados[i].resumen+"',";
+        queryInsertPriorizados+= /*RESUMEN*/"'"+stringResumen+"',";
         queryInsertPriorizados+= /*MODULO*/"'"+listadoPriorizados[i].modulo+"',";
         queryInsertPriorizados+= /*ENTORNO*/"'"+listadoPriorizados[i].entorno+"',";
         queryInsertPriorizados+= /*ESTADO*/"'"+listadoPriorizados[i].estado+"',";
