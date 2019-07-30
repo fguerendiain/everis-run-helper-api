@@ -6,6 +6,7 @@ import * as vincularDocumento from './tasks/vincularDocumento';
 import * as nocToJiraConverter from './tasks/nocToJiraConverter';
 import * as informeBacklogDiario from './tasks/informeBacklogDiario';
 import * as priorizadosupdate from './tasks/priorizadosUpdate';
+import * as rlmArmaJsonVisibilidad from './tasks/rlmArmaJsonVisibilidad';
 
 export function build():Express{
  
@@ -18,6 +19,7 @@ export function build():Express{
     app.get("/informeBacklogDiario", informeBacklogDiario.backlogDiario); //genera backlog
     app.post("/informeBacklogDiario", informeBacklogDiario.backlogDiario); //genera backlog y guarda en BBDD local
     app.get("/informeBacklogDiario/date/:date", informeBacklogDiario.searchBacklogByDate); //recibe una fecha para traer el backlog de ese dia en formato YYYYMMDD
+    app.get("/rlmArmaJsonVisibilidad/:transaction", rlmArmaJsonVisibilidad.armarJson); //genera backlog
 
 
 
