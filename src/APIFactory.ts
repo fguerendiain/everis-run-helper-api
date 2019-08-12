@@ -6,7 +6,7 @@ import * as vincularDocumento from './tasks/vincularDocumento';
 import * as nocToJiraConverter from './tasks/nocToJiraConverter';
 import * as informeBacklogDiario from './tasks/informeBacklogDiario';
 import * as priorizadosupdate from './tasks/priorizadosUpdate';
-import * as rlmArmaJsonVisibilidad from './tasks/rlmArmaJsonVisibilidad';
+import * as informeMensualPriorizados from './tasks/informeMensualPriorizados';
 
 export function build():Express{
  
@@ -19,11 +19,10 @@ export function build():Express{
     app.get("/informeBacklogDiario", informeBacklogDiario.backlogDiario); //genera backlog
     app.post("/informeBacklogDiario", informeBacklogDiario.backlogDiario); //genera backlog y guarda en BBDD local
     app.get("/informeBacklogDiario/date/:date", informeBacklogDiario.searchBacklogByDate); //recibe una fecha para traer el backlog de ese dia en formato YYYYMMDD
-    app.get("/rlmArmaJsonVisibilidad/:transaction", rlmArmaJsonVisibilidad.armarJson); //genera backlog
-
-
-
     app.get("/priorizadosupdate", priorizadosupdate.run); //actualiza el listado de priorizados en BBDD local
+    app.get("/informemensual/priorizados/:date", informeMensualPriorizados.getPriorizadosByDate); //devuelve el total de priorizados del mes
+    app.get("/informemensual/backlog/:date", informeMensualPriorizados.getEverisNocByDate); //devuelve el total de backlog del mes
+
 
 
     //TEST
