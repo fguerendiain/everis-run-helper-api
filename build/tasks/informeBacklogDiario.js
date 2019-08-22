@@ -126,6 +126,7 @@ function backlogDiario(req, res) {
         });
         //recorro el listado de modulos para contar insidencias desglozando por ambientes
         //armo todo en un JSON como string
+        let v_saveBacklogBBDDQueryDistrinucion;
         for (let i = 0; i < modulesArray.length; i++) {
             for (let a = 0; a < nocsArray.length; a++) {
                 if (nocsArray[a].getSubCategoria() == modulesArray[i]) {
@@ -150,6 +151,19 @@ function backlogDiario(req, res) {
                 "hml": countDistribucionModuloHml,
                 "capa": countDistribucionModuloCapa
             };
+            if (save) {
+                let totalPorModulo = countDistribucionModuloPrd + countDistribucionModuloHml + countDistribucionModuloCapa;
+                //INSERTAR LOS DATOS EN LA BBDD	
+                v_saveBacklogBBDDQueryDistrinucion = 'INSERT INTO "BACKLOG_DISTRIBUCION"("FECHA","MODULO","CANT_PRD","CANT_HML", "CANT_CAPA","TOTAL")	VALUES (';
+                v_saveBacklogBBDDQueryDistrinucion += /*FECHA*/ date + ",";
+                v_saveBacklogBBDDQueryDistrinucion += /*MODULO*/ "'" + modulesArray[i] + "',";
+                v_saveBacklogBBDDQueryDistrinucion += /*CANT_PRD*/ countDistribucionModuloPrd + ',';
+                v_saveBacklogBBDDQueryDistrinucion += /*CANT_HML*/ countDistribucionModuloHml + ',';
+                v_saveBacklogBBDDQueryDistrinucion += /*CANT_CAPA*/ countDistribucionModuloCapa + ',';
+                v_saveBacklogBBDDQueryDistrinucion += /*TOTAL*/ totalPorModulo + ");";
+                //inserto distribucion por modulos
+                yield new bbddpostgres.BBDDconect().query(v_saveBacklogBBDDQueryDistrinucion);
+            }
             distribucionModulo.push(distribucionModuloToJSON);
             countDistribucionModuloPrd = 0;
             countDistribucionModuloHml = 0;

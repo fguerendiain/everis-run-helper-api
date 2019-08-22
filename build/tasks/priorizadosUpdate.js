@@ -37,13 +37,8 @@ function run(req, res) {
             //si el priorizado no tiene visibilidad no se inserta en base y se envia por mail
             if (listadoPriorizados[i].entorno == 'SIN VISIBILIDAD') {
                 let existeEnBBDD = (yield new bbddpostgres.BBDDconect().query('SELECT COUNT(1) as EXISTE FROM "PRIORIZADOS_SIN_VISIBILIDAD" WHERE "NOC" = ' + "'" + listadoPriorizados[i].noc + "'" + ' AND "FECHA" = ' + "'" + dateNow + "'" + ';'));
+                //si el noc sin visibilidad no existe en la BBDD lo creo e informo por mail
                 if (existeEnBBDD[0].existe == 0) {
-                    console.log('*****************');
-                    console.log('*****************');
-                    console.log('NOC A INSERTAR: ' + listadoPriorizados[i].noc);
-                    console.log('FECHA A INSERTAR: ' + dateNow);
-                    console.log('*****************');
-                    console.log('*****************');
                     yield new bbddpostgres.BBDDconect().query('INSERT INTO public."PRIORIZADOS_SIN_VISIBILIDAD"("NOC", "FECHA") VALUES (' + "'" + listadoPriorizados[i].noc + "'" + ', ' + "'" + dateNow + "'" + ');');
                     let mailTxt = `El NOC-${listadoPriorizados[i].noc} no posee visibilidad para Everis\
                 \nhttps://noc-mesa.buenosaires.gob.ar/WorkOrder.do?woMode=viewWO&woID=${listadoPriorizados[i].noc}&&fromListView=true`;

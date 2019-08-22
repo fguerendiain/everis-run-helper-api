@@ -128,6 +128,7 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 
 	//recorro el listado de modulos para contar insidencias desglozando por ambientes
 	//armo todo en un JSON como string
+	let v_saveBacklogBBDDQueryDistrinucion:string;
 	for(let i = 0; i < modulesArray.length; i++){
 		for(let a = 0; a < nocsArray.length; a++){
 
@@ -151,6 +152,21 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 			"capa": countDistribucionModuloCapa
 		}
 
+		if(save){
+			let totalPorModulo = countDistribucionModuloPrd+countDistribucionModuloHml+countDistribucionModuloCapa;
+			//INSERTAR LOS DATOS EN LA BBDD	
+			v_saveBacklogBBDDQueryDistrinucion = 'INSERT INTO "BACKLOG_DISTRIBUCION"("FECHA","MODULO","CANT_PRD","CANT_HML", "CANT_CAPA","TOTAL")	VALUES (';
+			v_saveBacklogBBDDQueryDistrinucion += /*FECHA*/date+",";
+			v_saveBacklogBBDDQueryDistrinucion += /*MODULO*/"'"+modulesArray[i]+"',";
+			v_saveBacklogBBDDQueryDistrinucion += /*CANT_PRD*/countDistribucionModuloPrd+',';
+			v_saveBacklogBBDDQueryDistrinucion += /*CANT_HML*/countDistribucionModuloHml+','; 
+			v_saveBacklogBBDDQueryDistrinucion += /*CANT_CAPA*/countDistribucionModuloCapa+',';
+			v_saveBacklogBBDDQueryDistrinucion += /*TOTAL*/totalPorModulo+");";
+
+			//inserto distribucion por modulos
+			await new bbddpostgres.BBDDconect().query(v_saveBacklogBBDDQueryDistrinucion)
+		}
+
 		distribucionModulo.push(distribucionModuloToJSON);
 
 		countDistribucionModuloPrd = 0;
@@ -161,6 +177,8 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 	let priorizadosPorRegistro:any[] = await priorizadosupdate.getAllPriorizadosByDay(date);
 
 	if(save){
+
+
 		//INSERTAR LOS DATOS EN LA BBDD	
 		let v_saveBacklogBBDDQuery:string;
 		v_saveBacklogBBDDQuery = 'INSERT INTO "BACKLOG"("FECHA","PRIORIZADO_BAJA","PRIORIZADO_ALTA","PRIORIZADO_URGENTE", "CREADAS","RESUELTAS","PRIORIZADO_PORCENTUAL_BAJA","PRIORIZADO_PORCENTUAL_ALTA",';
