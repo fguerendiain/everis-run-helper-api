@@ -36,10 +36,15 @@ export async function run(req: express.Request, res: express.Response){
 
         //si el priorizado no tiene visibilidad no se inserta en base y se envia por mail
         if(listadoPriorizados[i].entorno == 'SIN VISIBILIDAD'){
-            let mailTxt =
-            `El NOC-${listadoPriorizados[i].noc} no posee visibilidad para Everis\
-            \nhttps://noc-mesa.buenosaires.gob.ar/WorkOrder.do?woMode=viewWO&woID=${listadoPriorizados[i].noc}&&fromListView=true`;
-            await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
+
+            let existeEnBBDD = (await new bbddpostgres.BBDDconect().query('SELECT COUNT(1) as EXISTE FROM "PRIORIZADOS_SIN_VISIBILIDAD" WHERE "NOC" = '+"'"+listadoPriorizados[i].noc+"'"+' AND "FECHA" = '+"'"+dateNow+"'"+';'));
+            //si el noc sin visibilidad no existe en la BBDD lo creo e informo por mail
+            if(existeEnBBDD[0].existe == 0){
+                        await new bbddpostgres.BBDDconect().query('INSERT INTO public."PRIORIZADOS_SIN_VISIBILIDAD"("NOC", "FECHA") VALUES ('+"'"+listadoPriorizados[i].noc+"'"+', '+"'"+dateNow+"'"+');');
+                let mailTxt =
+                `El NOC-${listadoPriorizados[i].noc} no posee visibilidad para Everis\
+                \nhttps://noc-mesa.buenosaires.gob.ar/WorkOrder.do?woMode=viewWO&woID=${listadoPriorizados[i].noc}&&fromListView=true`;
+                await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);            }
         }else{
             //si ya existe el priorizado se verifica el estado de lo contrario se inserta
             let priorizadoExiste = (await new bbddpostgres.BBDDconect().query('SELECT count(*) FROM "PRIORIZADOS" WHERE "FECHA" = '+"'"+dateNow+"'"+' AND "NOC" = '+"'"+listadoPriorizados[i].noc+"'"+';'))[0].count;

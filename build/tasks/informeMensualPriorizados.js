@@ -11,12 +11,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const logger = require("../logger");
 const emailtools = require("../tools/EMAILTools");
 const bbddpostgres = require("../entities/BBDDPostgres");
-const TASKNAME = 'INFORME MENSUAL PRIORIZADOS';
+const TASKNAME = 'INFORME MENSUAL';
 const RESPONSABLE = 'franco.javier.guerendiain@everis.com';
 //OBTENER TODOS LOS PRIORIZADOS EXISTENTES EN EL MES
 function getPriorizadosByDate(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        logger.taskBeginInfo(TASKNAME);
+        let specificTaskName = TASKNAME + " PRIORIZADOS";
+        logger.taskBeginInfo(specificTaskName);
         let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
         let PriorizadosByDate = (yield BBDDcheckDataBase.query("select 'NOC-'||\"NOC\" AS \"NOCs\",\"RESUMEN\",\"MODULO\",\"ENTORNO\", substr(\"FECHA_CREACION\",7,2)||'/'|| substr(\"FECHA_CREACION\",5,2)||'/'||substr(\"FECHA_CREACION\",1,4) AS \"FECHA_CREACION\",max(CAST (\"FECHA\" AS INTEGER)) from \"PRIORIZADOS\" where \"FECHA\" LIKE " + "'" + req.params.date + "%' GROUP BY 'NOC-'||\"NOC\",\"RESUMEN\",\"MODULO\",\"ENTORNO\",substr(\"FECHA_CREACION\",7,2)||'/'||substr(\"FECHA_CREACION\",5,2)||'/'||substr(\"FECHA_CREACION\",1,4)ORDER BY 1;"));
         let mailTxt = "<table border='1'>";
@@ -37,18 +38,19 @@ function getPriorizadosByDate(req, res) {
             mailTxt += "</tr>";
         }
         mailTxt += "</table>";
-        yield emailtools.sendByMail(RESPONSABLE, TASKNAME, mailTxt);
+        yield emailtools.sendByMail(RESPONSABLE, specificTaskName, mailTxt);
         yield res.status(200).send(mailTxt);
-        logger.taskEndInfo(TASKNAME);
+        logger.taskEndInfo(specificTaskName);
     });
 }
 exports.getPriorizadosByDate = getPriorizadosByDate;
 //OBTENER EL VALOR DIARIO DEL BACKLOG DE TODO EL MES
 function getEverisNocByDate(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        logger.taskBeginInfo(TASKNAME);
+        let specificTaskName = TASKNAME + " BACKLOG";
+        logger.taskBeginInfo(specificTaskName);
         let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
-        var BacklogByDate = (yield BBDDcheckDataBase.query("select substr(\"FECHA\",7,2)||'/'||substr(\"FECHA\",5,2) as \"Fecha\",\"RESUMEN_TOTAL_PENDIENTES\" from \"BACKLOG\" WHERE substr(\"FECHA\",5,2) = " + "'" + req.params.date + "'" + " order by \"FECHA\" desc;"));
+        var BacklogByDate = (yield BBDDcheckDataBase.query("select substr(\"FECHA\",7,2)||'/'||substr(\"FECHA\",5,2) as \"Fecha\",\"RESUMEN_TOTAL_PENDIENTES\" from \"BACKLOG\" WHERE \"FECHA\" LIKE " + "'" + req.params.date + "%'" + " order by \"FECHA\" desc;"));
         let mailTxt = "<table border='1'>";
         mailTxt += "<tr>";
         mailTxt += "<th>FECHA</th>";
@@ -61,9 +63,9 @@ function getEverisNocByDate(req, res) {
             mailTxt += "</tr>";
         }
         mailTxt += "</table>";
-        yield emailtools.sendByMail(RESPONSABLE, TASKNAME, mailTxt);
+        yield emailtools.sendByMail(RESPONSABLE, specificTaskName, mailTxt);
         yield res.status(200).send(mailTxt);
-        logger.taskEndInfo(TASKNAME);
+        logger.taskEndInfo(specificTaskName);
     });
 }
 exports.getEverisNocByDate = getEverisNocByDate;

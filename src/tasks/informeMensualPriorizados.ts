@@ -3,12 +3,13 @@ import * as logger from '../logger';
 import * as emailtools from '../tools/EMAILTools';
 import * as bbddpostgres from '../entities/BBDDPostgres';
 
-const TASKNAME = 'INFORME MENSUAL PRIORIZADOS'
+const TASKNAME = 'INFORME MENSUAL'
 const RESPONSABLE = 'franco.javier.guerendiain@everis.com'
 
 //OBTENER TODOS LOS PRIORIZADOS EXISTENTES EN EL MES
 export async function getPriorizadosByDate(req: express.Request, res: express.Response){
-	logger.taskBeginInfo(TASKNAME);
+    let specificTaskName = TASKNAME + " PRIORIZADOS";
+	logger.taskBeginInfo(specificTaskName);
 	let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
 	let PriorizadosByDate = (await BBDDcheckDataBase.query("select 'NOC-'||\"NOC\" AS \"NOCs\",\"RESUMEN\",\"MODULO\",\"ENTORNO\", substr(\"FECHA_CREACION\",7,2)||'/'|| substr(\"FECHA_CREACION\",5,2)||'/'||substr(\"FECHA_CREACION\",1,4) AS \"FECHA_CREACION\",max(CAST (\"FECHA\" AS INTEGER)) from \"PRIORIZADOS\" where \"FECHA\" LIKE "+"'"+req.params.date+"%' GROUP BY 'NOC-'||\"NOC\",\"RESUMEN\",\"MODULO\",\"ENTORNO\",substr(\"FECHA_CREACION\",7,2)||'/'||substr(\"FECHA_CREACION\",5,2)||'/'||substr(\"FECHA_CREACION\",1,4)ORDER BY 1;"));
 
@@ -32,17 +33,18 @@ export async function getPriorizadosByDate(req: express.Request, res: express.Re
     }
     mailTxt += "</table>" 
 
-    await emailtools.sendByMail(RESPONSABLE,TASKNAME,mailTxt);
+    await emailtools.sendByMail(RESPONSABLE,specificTaskName,mailTxt);
 
     await res.status(200).send(mailTxt);
-    logger.taskEndInfo(TASKNAME);
+    logger.taskEndInfo(specificTaskName);
 }
 
 //OBTENER EL VALOR DIARIO DEL BACKLOG DE TODO EL MES
 export async function getEverisNocByDate(req: express.Request, res: express.Response){
-	logger.taskBeginInfo(TASKNAME);
+    let specificTaskName = TASKNAME + " BACKLOG";
+	logger.taskBeginInfo(specificTaskName);
 	let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
-	var BacklogByDate = (await BBDDcheckDataBase.query("select substr(\"FECHA\",7,2)||'/'||substr(\"FECHA\",5,2) as \"Fecha\",\"RESUMEN_TOTAL_PENDIENTES\" from \"BACKLOG\" WHERE substr(\"FECHA\",5,2) = "+"'"+req.params.date+"'"+" order by \"FECHA\" desc;"));
+	var BacklogByDate = (await BBDDcheckDataBase.query("select substr(\"FECHA\",7,2)||'/'||substr(\"FECHA\",5,2) as \"Fecha\",\"RESUMEN_TOTAL_PENDIENTES\" from \"BACKLOG\" WHERE \"FECHA\" LIKE "+"'"+req.params.date+"%'"+" order by \"FECHA\" desc;"));
 
     let mailTxt = "<table border='1'>";
     mailTxt += "<tr>"
@@ -58,10 +60,10 @@ export async function getEverisNocByDate(req: express.Request, res: express.Resp
     }
     mailTxt += "</table>" 
 
-    await emailtools.sendByMail(RESPONSABLE,TASKNAME,mailTxt);
+    await emailtools.sendByMail(RESPONSABLE,specificTaskName,mailTxt);
    
 	await res.status(200).send(mailTxt);
-    logger.taskEndInfo(TASKNAME);
+    logger.taskEndInfo(specificTaskName);
 }
 
 
