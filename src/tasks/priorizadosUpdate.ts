@@ -7,7 +7,7 @@ import * as googlesheet from '../externalServices/RESTService/GSHEETService'
 import { isNullOrUndefined } from 'util';
 
 const TASKNAME = 'PRIORIZADOS UPDATE'
-const RESPONSABLE = 'franco.javier.guerendiain@everis.com'
+const RESPONSABLE = 'gilda.lucia.russo@everis.com'
 
 export async function run(req: express.Request, res: express.Response){
 
@@ -59,8 +59,8 @@ export async function run(req: express.Request, res: express.Response){
         }
     }
 
-	let mailTxt = 'Se cargaron priorizados a la BBDD';
-	await emailtools.sendByMail(RESPONSABLE,TASKNAME,mailTxt);
+	//let mailTxt = 'Se cargaron priorizados a la BBDD';
+	//await emailtools.sendByMail(RESPONSABLE,TASKNAME,mailTxt);
 
     await res.status(200).send(listadoPriorizados);
     logger.taskEndInfo(TASKNAME);

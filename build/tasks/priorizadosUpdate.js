@@ -15,7 +15,7 @@ const emailtools = require("../tools/EMAILTools");
 const googlesheet = require("../externalServices/RESTService/GSHEETService");
 const util_1 = require("util");
 const TASKNAME = 'PRIORIZADOS UPDATE';
-const RESPONSABLE = 'franco.javier.guerendiain@everis.com';
+const RESPONSABLE = 'gilda.lucia.russo@everis.com';
 function run(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         let dateNow = moment().format('YYYYMMDD');
@@ -59,8 +59,8 @@ function run(req, res) {
                 }
             }
         }
-        let mailTxt = 'Se cargaron priorizados a la BBDD';
-        yield emailtools.sendByMail(RESPONSABLE, TASKNAME, mailTxt);
+        //let mailTxt = 'Se cargaron priorizados a la BBDD';
+        //await emailtools.sendByMail(RESPONSABLE,TASKNAME,mailTxt);
         yield res.status(200).send(listadoPriorizados);
         logger.taskEndInfo(TASKNAME);
     });
