@@ -59,7 +59,7 @@ function backlogDiario(req, res) {
         //obtengo listado de JIRAS con reopen en 1 modificados el dia anterior al actual
         let queryJIRAReOpen = (yield jiraservices.getJiraByJql('project = BISADE AND issuetype = COM_Bug AND labels = APM-SUP AND status in (Open, "In Progress", Paused) AND "Reopen Counter" = "1" AND updated >= -1d AND updated <= 0d').catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; })).total;
         //Obtengo listado de JIRAS correspondientes a regulatorios repetitivos
-        let quwryJIRARepetitivos = (yield jiraservices.getJiraByJql('project = BISADE AND issuetype = COM_Bug AND labels = REGULATORIO AND status in (Open, "In Progress", Paused)').catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; })).total;
+        let quwryJIRARepetitivos = (yield jiraservices.getJiraByJql('project = BISADE AND issuetype = COM_Bug AND labels = REGULATORIO AND status in (Open, "In Progress")').catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; })).total;
         if (util_1.isNullOrUndefined(queryNocsIdEnBandeja)) {
             let mailTxt = 'error de servicio externo al obtener Tickets en bandeja';
             yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
@@ -104,18 +104,29 @@ function backlogDiario(req, res) {
         }
         //recorro el listado de nocs para llenar contar prioridades y entornos
         for (let i = 0; i < nocsArray.length; i++) {
-            let stringSubject = nocsArray[i].getPriroriry();
-            if (stringSubject.includes("Alta")) {
+            if (util_1.isNullOrUndefined(nocsArray[i].getPriroriry())) {
+                console.log('----------------------------');
+                console.log('NO TIENE CAMPO PRIORIDAD');
+                console.log('----------------------------');
                 countBacklogPriorizadoUrgente++;
-            }
-            else if (stringSubject.includes("Media")) {
-                countBacklogPriorizadoAlta++;
-            }
-            else if (stringSubject.includes("Baja")) {
-                countBacklogPriorizadoBaja++;
             }
             else {
-                countBacklogPriorizadoUrgente++;
+                console.log('----------------------------');
+                console.log('ENTRE A REVISAR LA PRIORIDAD');
+                console.log('----------------------------');
+                let stringSubject = nocsArray[i].getPriroriry();
+                if (stringSubject.includes("Alta")) {
+                    countBacklogPriorizadoUrgente++;
+                }
+                else if (stringSubject.includes("Media")) {
+                    countBacklogPriorizadoAlta++;
+                }
+                else if (stringSubject.includes("Baja")) {
+                    countBacklogPriorizadoBaja++;
+                }
+                else {
+                    countBacklogPriorizadoUrgente++;
+                }
             }
             //armo un array auxiliar con los modulos
             modulesArrayAll.push(nocsArray[i].getSubCategoria());
