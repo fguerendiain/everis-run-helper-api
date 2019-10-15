@@ -45,7 +45,7 @@
 		"jira":{
 			"host":"https://steps.everis.com/jiraproy/rest/api/2/",
 			"user":"laparlov",
-			"password":"QW0wbGFjMG1pZGE="
+			"password":"UmFtMG5pbmZ1bWFibDM="
 		},
 		"noc":{
 			"host":"http://noc-mesa.buenosaires.gob.ar/sdpapi/request",

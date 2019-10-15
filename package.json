@@ -23,7 +23,7 @@
     "@types/moment": "^2.13.0",
     "@types/oracledb": "^1.11.34",
     "@types/request": "^2.48.1",
-    "axios": "^0.18.0",
+    "axios": "^0.18.1",
     "blob": "0.0.5",
     "cors": "^2.8.5",
     "express": "^4.16.4",
@@ -39,6 +39,7 @@
     "pg": "^7.11.0",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.7",
-    "xml2json": "^0.11.2"
+    "xml2json": "^0.11.2",
+    "xmlhttprequest": "^1.8.0"
   }
 }
