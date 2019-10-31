@@ -20,12 +20,12 @@ const JIRACREDENTIALS = config.get("credentials").jira;
     export function createJira(jiraInstance:Jira){
         let url = JIRACREDENTIALS.host;
         let method = "POST";
-        let headers = '{"Content-Type":"application/json","Accept":"application/json",'+authConverter()+'}';
+        let headers:{} = {"Content-Type":"application/json",Authorization:authConverter_v2()};
         let param = 'issue';
         let body = bodyFormatForJira(jiraInstance);
-        return resttools.apiRestConsume(url,method,headers,createJira.name,body,param);
+        return resttools.apiRestConsume_v1(url,method,headers,createJira.name,body,param);
     }
-
+   
     //MODIFICAR JIRA
     export function modifyJira(jiraInstance:Jira){
         let url = JIRACREDENTIALS.host;
@@ -33,7 +33,7 @@ const JIRACREDENTIALS = config.get("credentials").jira;
         let headers = '{"Content-Type":"application/json","Accept":"application/json",'+authConverter()+'}';
         let param = 'issue/'+jiraInstance.getId();
         let body = bodyFormatForJira(jiraInstance);
-        return resttools.apiRestConsume(url,method,headers,modifyJira.name,body,param);
+//        return resttools.apiRestConsume(url,method,headers,modifyJira.name,body,param);
     }
 
     //BORRAR JIRA POR ID
@@ -59,10 +59,10 @@ const JIRACREDENTIALS = config.get("credentials").jira;
     export function addJiraCommentsById(v_id:string,v_coment:string){
         let url = JIRACREDENTIALS.host;
         let method = "POST";
-        let headers = '{"Content-Type":"application/json","Accept":"application/json",'+authConverter()+'}';
+        let headers:{} = {"Content-Type":"application/json",Accept:"application/json",Authorization:authConverter_v2()};
         let param = 'issue/'+v_id+'/comment';
-        let body = '{"body":"'+v_coment+'"}';
-        return resttools.apiRestConsume(url,method,headers,addJiraCommentsById.name,body,param);
+        let body:{} = {body:v_coment};
+        return resttools.apiRestConsume_v1(url,method,headers,addJiraCommentsById.name,body,param);
     }
 
 
@@ -124,34 +124,31 @@ const JIRACREDENTIALS = config.get("credentials").jira;
         return '"Authorization":'+ convert;
     }
 
+    function authConverter_v2(){
+        return 'Basic '+ Buffer.from(JIRACREDENTIALS.user+':'+config.passDecoder(JIRACREDENTIALS.password)).toString("base64");
+    }
 
     function bodyFormatForJira(v_JiraObject:Jira){
         let body:{} = {
-            "fields": {
-                "summary" : v_JiraObject.getSubject(),
-                "issuetype": {
-                    "name" : v_JiraObject.getType()
+            fields: {
+                summary : v_JiraObject.getSubject(),
+                issuetype:{name:"COM_Bug"},
+     //           components: componentBuilder(v_JiraObject),
+      //          labels: v_JiraObject.getLabels(),
+                versions: [{id:"111917"}],
+                project: {
+                    key: "BISADE"
                 },
-                "components": componentBuilder(v_JiraObject),
-                "versions": [
-                    {
-                        "id": "111917"
-                    }
-                ],
-                "project": {
-                    "key": "BISADE"
+                description: v_JiraObject.getDescription(),
+                assignee: {
+                    name: v_JiraObject.getAssigne()
                 },
-                "description": v_JiraObject.getDescription(),
-                "assignee": {
-                    "name": v_JiraObject.getAssigne()
-                },
-                "priority": {
-                    "id": v_JiraObject.getPriroriry()
-                },
-                "labels": v_JiraObject.getLabels()
+                priority: {
+                    id: v_JiraObject.getPriroriry()
+                }
             }
         };
-        return JSON.stringify(body);
+        return  body;
     }
 
     function componentBuilder(v_JiraObject:Jira){

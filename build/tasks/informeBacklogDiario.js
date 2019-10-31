@@ -105,15 +105,9 @@ function backlogDiario(req, res) {
         //recorro el listado de nocs para llenar contar prioridades y entornos
         for (let i = 0; i < nocsArray.length; i++) {
             if (util_1.isNullOrUndefined(nocsArray[i].getPriroriry())) {
-                console.log('----------------------------');
-                console.log('NO TIENE CAMPO PRIORIDAD');
-                console.log('----------------------------');
                 countBacklogPriorizadoUrgente++;
             }
             else {
-                console.log('----------------------------');
-                console.log('ENTRE A REVISAR LA PRIORIDAD');
-                console.log('----------------------------');
                 let stringSubject = nocsArray[i].getPriroriry();
                 if (stringSubject.includes("Alta")) {
                     countBacklogPriorizadoUrgente++;

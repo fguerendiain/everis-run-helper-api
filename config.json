@@ -47,6 +47,12 @@
 			"user":"laparlov",
 			"password":"UmFtMG5pbmZ1bWFibDM="
 		},
+		"asijira":{
+			"host":"https://asijira.buenosaires.gob.ar/rest/api/2/",
+			"user":"20266918799",
+			"password":"SXNAQ3luMTE=",
+			"jsonidcookie" : "JSESSIONID=41FDC5CC279FD68C1D728C52EFE87D71"
+		},
 		"noc":{
 			"host":"http://noc-mesa.buenosaires.gob.ar/sdpapi/request",
 			"techniciankeyRib" : "6CB1598C-752B-416B-B8DA-27644C3AF7EC",
