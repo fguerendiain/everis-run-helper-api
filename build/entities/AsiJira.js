@@ -75,6 +75,7 @@ class AsiJira extends Ticket_1.ticket {
                 this.setAssigne(jiraData.fields.assignee.name);
                 this.setReopenCounter(jiraData.fields.customfield_10304);
                 this.labels = jiraData.fields.labels;
+                this.setProject(jiraData.fields.project.key);
                 //cargo el listado de components
                 for (let i = 0; i < jiraData.fields.components.length; i++) {
                     this.setComponents(jiraData.fields.components[i].name);
@@ -110,6 +111,12 @@ class AsiJira extends Ticket_1.ticket {
     }
     setAssigne(v_assigne) {
         this.assigne = v_assigne;
+    }
+    getProject() {
+        return this.project;
+    }
+    setProject(v_project) {
+        this.project = v_project;
     }
     getLabels() {
         return this.labels;

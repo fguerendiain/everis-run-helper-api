@@ -24,11 +24,10 @@ export function build():Express{
     app.get("/priorizadosupdate", priorizadosupdate.run); //actualiza el listado de priorizados en BBDD local
     app.get("/informemensual/priorizados/:date", informeMensualPriorizados.getPriorizadosByDate); //devuelve el total de priorizados del mes
     app.get("/informemensual/backlog/:date", informeMensualPriorizados.getEverisNocByDate); //devuelve el total de backlog del mes
+    app.get("/asijiratojiraconverter", asiJiraToJiraConverter.createJirafromAsiJira); //importa los jiraAsi a Jira
 
 
-
-    //TEST
-    app.get("/asijiratojiraconverter", asiJiraToJiraConverter.createJirafromAsiJira);
+    //DEVELOP
     app.get("/vincularDocumento", vincularDocumento.run);
     app.get("/noctojiraconverter", nocToJiraConverter.run);
     app.get("/convertirBase64/encode/:filedir", convertirBase64.base64Encoder); //devuelve el documento pasado por parametro como un string en Base64

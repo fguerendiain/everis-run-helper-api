@@ -101,11 +101,21 @@ exports.getJiraByJql = getJiraByJql;
 function getTransicionJira(v_query) {
     let url = JIRACREDENTIALS.host;
     let method = "GET";
-    let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + '}';
+    let headers = { "Content-Type": "application/json", Accept: "application/json", Authorization: authConverter_v2() };
     let param = 'issue/' + v_query + '/transitions?expand=transitions.fields';
-    return resttools.apiRestConsume(url, method, headers, getTransicionJira.name, null, param);
+    return resttools.apiRestConsume_v1(url, method, headers, getTransicionJira.name, null, param);
 }
 exports.getTransicionJira = getTransicionJira;
+//CAMBIAR ESTADO DE JIRA
+function setTransicionJira(v_query, v_mssage, v_status) {
+    let url = JIRACREDENTIALS.host;
+    let method = "POST";
+    let headers = { "Content-Type": "application/json", Accept: "application/json", Authorization: authConverter_v2() };
+    let param = 'issue/' + v_query + '/transitions?expand=transitions.fields';
+    let body = { update: { comment: [{ add: { body: v_mssage } }] }, transition: { id: v_status } };
+    return resttools.apiRestConsume_v1(url, method, headers, getTransicionJira.name, body, param);
+}
+exports.setTransicionJira = setTransicionJira;
 function authConverter() {
     let convert = '"Basic ' + Buffer.from(JIRACREDENTIALS.user + ':' + config.passDecoder(JIRACREDENTIALS.password)).toString("base64") + '"';
     return '"Authorization":' + convert;
@@ -119,7 +129,7 @@ function bodyFormatForJira(v_JiraObject) {
             summary: v_JiraObject.getSubject(),
             issuetype: { name: "COM_Bug" },
             //           components: componentBuilder(v_JiraObject),
-            //          labels: v_JiraObject.getLabels(),
+            labels: v_JiraObject.getLabels(),
             versions: [{ id: "111917" }],
             project: {
                 key: "BISADE"

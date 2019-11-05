@@ -45,19 +45,19 @@ exports.getJiraById = getJiraById;
 function getJiraCommentsById(v_query) {
     let url = JIRACREDENTIALS.host;
     let method = "GET";
-    let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + ',"Cookie":"' + JIRACREDENTIALS.jsonidcookie + '"}';
+    let headers = { "Content-Type": "application/json", Accept: "application/json", Authorization: authConverter_v2(), Cookie: JIRACREDENTIALS.jsonidcookie };
     let param = 'issue/' + v_query + '/comment';
-    return resttools.apiRestConsume(url, method, headers, getJiraCommentsById.name, null, param);
+    return resttools.apiRestConsume_v1(url, method, headers, getJiraCommentsById.name, null, param);
 }
 exports.getJiraCommentsById = getJiraCommentsById;
 //AGREGAR COMENTARIO A JIRA POR ID
 function addJiraCommentsById(v_id, v_coment) {
     let url = JIRACREDENTIALS.host;
     let method = "POST";
-    let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + ',"Cookie":"' + JIRACREDENTIALS.jsonidcookie + '"}';
+    let headers = { "Content-Type": "application/json", Accept: "application/json", Authorization: authConverter_v2(), Cookie: JIRACREDENTIALS.jsonidcookie };
     let param = 'issue/' + v_id + '/comment';
     let body = '{"body":"' + v_coment + '"}';
-    return resttools.apiRestConsume(url, method, headers, addJiraCommentsById.name, body, param);
+    return resttools.apiRestConsume_v1(url, method, headers, addJiraCommentsById.name, body, param);
 }
 exports.addJiraCommentsById = addJiraCommentsById;
 /*     //BUSCAR WORKLOG DE JIRA POR ID
@@ -83,18 +83,18 @@ exports.addJiraCommentsById = addJiraCommentsById;
 function getJiraByText(v_query) {
     let url = JIRACREDENTIALS.host;
     let method = "GET";
-    let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + ',"Cookie":"' + JIRACREDENTIALS.jsonidcookie + '"}';
+    let headers = { "Content-Type": "application/json", Accept: "application/json", Authorization: authConverter_v2(), Cookie: JIRACREDENTIALS.jsonidcookie };
     let param = 'search?jql=text ~ "' + v_query + '"';
-    return resttools.apiRestConsume(url, method, headers, getJiraByText.name, null, param);
+    return resttools.apiRestConsume_v1(url, method, headers, getJiraByText.name, null, param);
 }
 exports.getJiraByText = getJiraByText;
 //BUSCAR JIRA POR QUERY
 function getJiraByJql(v_query) {
     let url = JIRACREDENTIALS.host;
     let method = "GET";
-    let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + ',"Cookie":"' + JIRACREDENTIALS.jsonidcookie + '"}';
+    let headers = { "Content-Type": "application/json", Accept: "application/json", Authorization: authConverter_v2(), Cookie: JIRACREDENTIALS.jsonidcookie };
     let param = 'search?jql=' + v_query;
-    return resttools.apiRestConsume(url, method, headers, getJiraByJql.name, null, param);
+    return resttools.apiRestConsume_v1(url, method, headers, getJiraByJql.name, null, param);
 }
 exports.getJiraByJql = getJiraByJql;
 //OBTENER TRANSICION DE JIRA
@@ -109,6 +109,9 @@ exports.getTransicionJira = getTransicionJira;
 function authConverter() {
     let convert = '"Basic ' + Buffer.from(JIRACREDENTIALS.user + ':' + config.passDecoder(JIRACREDENTIALS.password)).toString("base64") + '"';
     return '"Authorization":' + convert;
+}
+function authConverter_v2() {
+    return 'Basic ' + Buffer.from(JIRACREDENTIALS.user + ':' + config.passDecoder(JIRACREDENTIALS.password)).toString("base64");
 }
 function bodyFormatForJira(v_JiraObject) {
     let body = {

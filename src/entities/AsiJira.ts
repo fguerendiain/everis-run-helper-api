@@ -7,6 +7,7 @@ import { isNullOrUndefined } from 'util';
 export class AsiJira extends ticket{
 
 	private assigne:string;
+	private project:string;
     private labels = new Array;
     private components = new Array;
 	private reopenCounter:number;
@@ -75,6 +76,7 @@ export class AsiJira extends ticket{
             this.setAssigne(jiraData.fields.assignee.name);
             this.setReopenCounter(jiraData.fields.customfield_10304);
             this.labels = jiraData.fields.labels;
+            this.setProject(jiraData.fields.project.key);
 
             //cargo el listado de components
             for(let i = 0 ; i < jiraData.fields.components.length; i++){
@@ -119,6 +121,14 @@ export class AsiJira extends ticket{
    
     public setAssigne(v_assigne){
         this.assigne = v_assigne;
+    }
+
+    public getProject(){
+        return this.project;        
+       }
+   
+    public setProject(v_project){
+        this.project = v_project;
     }
 
     public getLabels(){
