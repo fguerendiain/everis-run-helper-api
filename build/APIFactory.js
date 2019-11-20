@@ -10,6 +10,7 @@ const priorizadosupdate = require("./tasks/priorizadosUpdate");
 const informeMensualPriorizados = require("./tasks/informeMensualPriorizados");
 const convertirBase64 = require("./tasks/convertirBase64");
 const asiJiraToJiraConverter = require("./tasks/asiJiraToJiraConverter");
+const appSade9570 = require("./tasks/appSade9570");
 function build() {
     let app = express();
     app.use(bodyParser.json());
@@ -22,6 +23,8 @@ function build() {
     app.get("/informemensual/priorizados/:date", informeMensualPriorizados.getPriorizadosByDate); //devuelve el total de priorizados del mes
     app.get("/informemensual/backlog/:date", informeMensualPriorizados.getEverisNocByDate); //devuelve el total de backlog del mes
     app.get("/asijiratojiraconverter", asiJiraToJiraConverter.createJirafromAsiJira); //importa los jiraAsi a Jira
+    //REGULATORIOS
+    app.get("/appSade9570", appSade9570.run); //genera nueva transaccion a partir de la anterior, imprime update para actualizar registro de psoc con nueva transaccion.
     //DEVELOP
     app.get("/vincularDocumento", vincularDocumento.run);
     app.get("/noctojiraconverter", nocToJiraConverter.run);
