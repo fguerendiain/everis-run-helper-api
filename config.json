@@ -19,7 +19,7 @@
 		},
 		"capa":{
 			"user":"gruizdec",
-			"password":"gruiz123",
+			"password":"GRu_GOb19",
 			"connectString":"sadebd-cluster-cap.hml.gcba.gob.ar/sadecapa"
 		},
 		"standby":{
@@ -30,7 +30,7 @@
 		"test":{
 			"user":"TAD_SADE",
 			"password":"tad_sade",
-			"connectString":"7.217.8.215/TRACKTESTBD.GCABA.EVERIS.INT"
+			"connectString":"10.217.88.215/TRACKTESTBD.GCABA.EVERIS.INT"
 		}
 	},
 	"bbddpostgres":{
@@ -45,7 +45,13 @@
 		"jira":{
 			"host":"https://steps.everis.com/jiraproy/rest/api/2/",
 			"user":"laparlov",
-			"password":"QW0wbGFjMG1pZGE="
+			"password":"UmFtMG5pbmZ1bWFibDM="
+		},
+		"asijira":{
+			"host":"https://asijira.buenosaires.gob.ar/rest/api/2/",
+			"user":"20266918799",
+			"password":"SXNAQ3luMTE=",
+			"jsonidcookie" : "JSESSIONID=41FDC5CC279FD68C1D728C52EFE87D71"
 		},
 		"noc":{
 			"host":"http://noc-mesa.buenosaires.gob.ar/sdpapi/request",

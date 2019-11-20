@@ -59,7 +59,7 @@ function backlogDiario(req, res) {
         //obtengo listado de JIRAS con reopen en 1 modificados el dia anterior al actual
         let queryJIRAReOpen = (yield jiraservices.getJiraByJql('project = BISADE AND issuetype = COM_Bug AND labels = APM-SUP AND status in (Open, "In Progress", Paused) AND "Reopen Counter" = "1" AND updated >= -1d AND updated <= 0d').catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; })).total;
         //Obtengo listado de JIRAS correspondientes a regulatorios repetitivos
-        let quwryJIRARepetitivos = (yield jiraservices.getJiraByJql('project = BISADE AND issuetype = COM_Bug AND labels = REGULATORIO AND status in (Open, "In Progress", Paused)').catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; })).total;
+        let quwryJIRARepetitivos = (yield jiraservices.getJiraByJql('project = BISADE AND issuetype = COM_Bug AND labels = REGULATORIO AND status in (Open, "In Progress")').catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; })).total;
         if (util_1.isNullOrUndefined(queryNocsIdEnBandeja)) {
             let mailTxt = 'error de servicio externo al obtener Tickets en bandeja';
             yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
@@ -104,18 +104,23 @@ function backlogDiario(req, res) {
         }
         //recorro el listado de nocs para llenar contar prioridades y entornos
         for (let i = 0; i < nocsArray.length; i++) {
-            let stringSubject = nocsArray[i].getPriroriry();
-            if (stringSubject.includes("Alta")) {
+            if (util_1.isNullOrUndefined(nocsArray[i].getPriroriry())) {
                 countBacklogPriorizadoUrgente++;
-            }
-            else if (stringSubject.includes("Media")) {
-                countBacklogPriorizadoAlta++;
-            }
-            else if (stringSubject.includes("Baja")) {
-                countBacklogPriorizadoBaja++;
             }
             else {
-                countBacklogPriorizadoUrgente++;
+                let stringSubject = nocsArray[i].getPriroriry();
+                if (stringSubject.includes("Alta")) {
+                    countBacklogPriorizadoUrgente++;
+                }
+                else if (stringSubject.includes("Media")) {
+                    countBacklogPriorizadoAlta++;
+                }
+                else if (stringSubject.includes("Baja")) {
+                    countBacklogPriorizadoBaja++;
+                }
+                else {
+                    countBacklogPriorizadoUrgente++;
+                }
             }
             //armo un array auxiliar con los modulos
             modulesArrayAll.push(nocsArray[i].getSubCategoria());
@@ -126,6 +131,7 @@ function backlogDiario(req, res) {
         });
         //recorro el listado de modulos para contar insidencias desglozando por ambientes
         //armo todo en un JSON como string
+        let v_saveBacklogBBDDQueryDistrinucion;
         for (let i = 0; i < modulesArray.length; i++) {
             for (let a = 0; a < nocsArray.length; a++) {
                 if (nocsArray[a].getSubCategoria() == modulesArray[i]) {
@@ -150,6 +156,19 @@ function backlogDiario(req, res) {
                 "hml": countDistribucionModuloHml,
                 "capa": countDistribucionModuloCapa
             };
+            if (save) {
+                let totalPorModulo = countDistribucionModuloPrd + countDistribucionModuloHml + countDistribucionModuloCapa;
+                //INSERTAR LOS DATOS EN LA BBDD	
+                v_saveBacklogBBDDQueryDistrinucion = 'INSERT INTO "BACKLOG_DISTRIBUCION"("FECHA","MODULO","CANT_PRD","CANT_HML", "CANT_CAPA","TOTAL")	VALUES (';
+                v_saveBacklogBBDDQueryDistrinucion += /*FECHA*/ date + ",";
+                v_saveBacklogBBDDQueryDistrinucion += /*MODULO*/ "'" + modulesArray[i] + "',";
+                v_saveBacklogBBDDQueryDistrinucion += /*CANT_PRD*/ countDistribucionModuloPrd + ',';
+                v_saveBacklogBBDDQueryDistrinucion += /*CANT_HML*/ countDistribucionModuloHml + ',';
+                v_saveBacklogBBDDQueryDistrinucion += /*CANT_CAPA*/ countDistribucionModuloCapa + ',';
+                v_saveBacklogBBDDQueryDistrinucion += /*TOTAL*/ totalPorModulo + ");";
+                //inserto distribucion por modulos
+                yield new bbddpostgres.BBDDconect().query(v_saveBacklogBBDDQueryDistrinucion);
+            }
             distribucionModulo.push(distribucionModuloToJSON);
             countDistribucionModuloPrd = 0;
             countDistribucionModuloHml = 0;

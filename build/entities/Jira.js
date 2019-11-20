@@ -83,7 +83,7 @@ class Jira extends Ticket_1.ticket {
                 //cargo el listado de mensajes
                 for (let i = 0; i < jiraComment.total; i++) {
                     let v_body = jiraComment.comments[i].body;
-                    let v_assignee = jiraComment.comments[i].author.name;
+                    let v_assignee = jiraComment.comments[i].author.displayName;
                     let v_created = jiraComment.comments[i].created;
                     let v_comentId = jiraComment.comments[i].id;
                     this.setComments(v_body, v_assignee, v_created, v_comentId);
@@ -91,7 +91,7 @@ class Jira extends Ticket_1.ticket {
                 //cargo el listado de worklog
                 for (let i = 0; i < jiraWorklog.total; i++) {
                     let worklogId = jiraWorklog.worklogs[i].id;
-                    let assignee = jiraWorklog.worklogs[i].author.name;
+                    let assignee = jiraWorklog.worklogs[i].author.displayName;
                     let body = jiraWorklog.worklogs[i].comment;
                     let created = jiraWorklog.worklogs[i].created;
                     let timeSpent = jiraWorklog.worklogs[i].timeSpentSeconds;

@@ -16,10 +16,10 @@ exports.getJiraById = getJiraById;
 function createJira(jiraInstance) {
     let url = JIRACREDENTIALS.host;
     let method = "POST";
-    let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + '}';
+    let headers = { "Content-Type": "application/json", Authorization: authConverter_v2() };
     let param = 'issue';
     let body = bodyFormatForJira(jiraInstance);
-    return resttools.apiRestConsume(url, method, headers, createJira.name, body, param);
+    return resttools.apiRestConsume_v1(url, method, headers, createJira.name, body, param);
 }
 exports.createJira = createJira;
 //MODIFICAR JIRA
@@ -29,7 +29,7 @@ function modifyJira(jiraInstance) {
     let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + '}';
     let param = 'issue/' + jiraInstance.getId();
     let body = bodyFormatForJira(jiraInstance);
-    return resttools.apiRestConsume(url, method, headers, modifyJira.name, body, param);
+    //        return resttools.apiRestConsume(url,method,headers,modifyJira.name,body,param);
 }
 exports.modifyJira = modifyJira;
 //BORRAR JIRA POR ID
@@ -54,10 +54,10 @@ exports.getJiraCommentsById = getJiraCommentsById;
 function addJiraCommentsById(v_id, v_coment) {
     let url = JIRACREDENTIALS.host;
     let method = "POST";
-    let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + '}';
+    let headers = { "Content-Type": "application/json", Accept: "application/json", Authorization: authConverter_v2() };
     let param = 'issue/' + v_id + '/comment';
-    let body = '{"body":"' + v_coment + '"}';
-    return resttools.apiRestConsume(url, method, headers, addJiraCommentsById.name, body, param);
+    let body = { body: v_coment };
+    return resttools.apiRestConsume_v1(url, method, headers, addJiraCommentsById.name, body, param);
 }
 exports.addJiraCommentsById = addJiraCommentsById;
 //BUSCAR WORKLOG DE JIRA POR ID
@@ -101,42 +101,49 @@ exports.getJiraByJql = getJiraByJql;
 function getTransicionJira(v_query) {
     let url = JIRACREDENTIALS.host;
     let method = "GET";
-    let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + '}';
+    let headers = { "Content-Type": "application/json", Accept: "application/json", Authorization: authConverter_v2() };
     let param = 'issue/' + v_query + '/transitions?expand=transitions.fields';
-    return resttools.apiRestConsume(url, method, headers, getTransicionJira.name, null, param);
+    return resttools.apiRestConsume_v1(url, method, headers, getTransicionJira.name, null, param);
 }
 exports.getTransicionJira = getTransicionJira;
+//CAMBIAR ESTADO DE JIRA
+function setTransicionJira(v_query, v_mssage, v_status) {
+    let url = JIRACREDENTIALS.host;
+    let method = "POST";
+    let headers = { "Content-Type": "application/json", Accept: "application/json", Authorization: authConverter_v2() };
+    let param = 'issue/' + v_query + '/transitions?expand=transitions.fields';
+    let body = { update: { comment: [{ add: { body: v_mssage } }] }, transition: { id: v_status } };
+    return resttools.apiRestConsume_v1(url, method, headers, getTransicionJira.name, body, param);
+}
+exports.setTransicionJira = setTransicionJira;
 function authConverter() {
     let convert = '"Basic ' + Buffer.from(JIRACREDENTIALS.user + ':' + config.passDecoder(JIRACREDENTIALS.password)).toString("base64") + '"';
     return '"Authorization":' + convert;
 }
+function authConverter_v2() {
+    return 'Basic ' + Buffer.from(JIRACREDENTIALS.user + ':' + config.passDecoder(JIRACREDENTIALS.password)).toString("base64");
+}
 function bodyFormatForJira(v_JiraObject) {
     let body = {
-        "fields": {
-            "summary": v_JiraObject.getSubject(),
-            "issuetype": {
-                "name": v_JiraObject.getType()
+        fields: {
+            summary: v_JiraObject.getSubject(),
+            issuetype: { name: "COM_Bug" },
+            //           components: componentBuilder(v_JiraObject),
+            labels: v_JiraObject.getLabels(),
+            versions: [{ id: "111917" }],
+            project: {
+                key: "BISADE"
             },
-            "components": componentBuilder(v_JiraObject),
-            "versions": [
-                {
-                    "id": "111917"
-                }
-            ],
-            "project": {
-                "key": "BISADE"
+            description: v_JiraObject.getDescription(),
+            assignee: {
+                name: v_JiraObject.getAssigne()
             },
-            "description": v_JiraObject.getDescription(),
-            "assignee": {
-                "name": v_JiraObject.getAssigne()
-            },
-            "priority": {
-                "id": v_JiraObject.getPriroriry()
-            },
-            "labels": v_JiraObject.getLabels()
+            priority: {
+                id: v_JiraObject.getPriroriry()
+            }
         }
     };
-    return JSON.stringify(body);
+    return body;
 }
 function componentBuilder(v_JiraObject) {
     let formatedComponents = new Array;
