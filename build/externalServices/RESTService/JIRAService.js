@@ -26,10 +26,10 @@ exports.createJira = createJira;
 function modifyJira(jiraInstance) {
     let url = JIRACREDENTIALS.host;
     let method = "PUT";
-    let headers = '{"Content-Type":"application/json","Accept":"application/json",' + authConverter() + '}';
+    let headers = { "Content-Type": "application/json", Authorization: authConverter_v2() };
     let param = 'issue/' + jiraInstance.getId();
     let body = bodyFormatForJira(jiraInstance);
-    //        return resttools.apiRestConsume(url,method,headers,modifyJira.name,body,param);
+    return resttools.apiRestConsume_v1(url, method, headers, createJira.name, body, param);
 }
 exports.modifyJira = modifyJira;
 //BORRAR JIRA POR ID
@@ -128,7 +128,7 @@ function bodyFormatForJira(v_JiraObject) {
         fields: {
             summary: v_JiraObject.getSubject(),
             issuetype: { name: "COM_Bug" },
-            //           components: componentBuilder(v_JiraObject),
+            components: componentBuilder(v_JiraObject),
             labels: v_JiraObject.getLabels(),
             versions: [{ id: "111917" }],
             project: {
@@ -148,7 +148,7 @@ function bodyFormatForJira(v_JiraObject) {
 function componentBuilder(v_JiraObject) {
     let formatedComponents = new Array;
     for (let i = 0; i < v_JiraObject.getComponents().length; i++) {
-        formatedComponents.push({ "name": v_JiraObject.getComponents()[i] });
+        formatedComponents.push({ "id": v_JiraObject.getComponents()[i] });
     }
     return formatedComponents;
 }

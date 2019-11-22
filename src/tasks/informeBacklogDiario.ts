@@ -262,9 +262,13 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 		priorizadosPorRegistro
 	} 
 
-	let mailTxt = 'Se envio Backlog Diario';
-	await emailtools.sendByMail(RESPONSABLE,TASKNAME,mailTxt);
-
+	// let mailTxt = 'Se envio Backlog Diario';
+	// try{
+	// 	await emailtools.sendByMail(RESPONSABLE,TASKNAME,mailTxt);
+	// }
+	// catch(e){
+	// 	logger.error('EMAIL','Error al enviar correo: '+e);
+	// }
 	await res.status(200).send(backlogJsonResponse);
 	logger.taskEndInfo(TASKNAME);
 }

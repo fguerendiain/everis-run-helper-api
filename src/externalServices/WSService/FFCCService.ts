@@ -1,4 +1,5 @@
 import * as wstools from "../../tools/WStools";
+import * as moment from 'moment';
 
 /* template para agregar webservice
 export function NOMBREDELSERVICIO(v_param){
@@ -9,7 +10,7 @@ export function NOMBREDELSERVICIO(v_param){
 */
 
 //CONSULTAR DIRECCION VALIDA
-export function grabarTransaccion(v_entorno:string,vFormName:string,vSistemaOrigen:string,data){
+export function grabarTransaccion(v_entorno:string,vFechaTransaccion:string,vFormName:string,vSistemaOrigen:string,data){
     let v_url = v_entorno+'/dynform-web/transaccionService';
 
     let xmlStringBuilder:string;
@@ -18,7 +19,7 @@ export function grabarTransaccion(v_entorno:string,vFormName:string,vSistemaOrig
     xmlStringBuilder += '<soapenv:Body>';
     xmlStringBuilder += '<ser:grabarTransaccion>';
     xmlStringBuilder += '<arg0>';
-    xmlStringBuilder += '<fechaCreacion>'+/*SYSDATE EN RFC3339*/'</fechaCreacion>';
+    xmlStringBuilder += vFechaTransaccion;
     xmlStringBuilder += vFormName;
     xmlStringBuilder += '<sistOrigen>'+vSistemaOrigen+'</sistOrigen>';
 

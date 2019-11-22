@@ -42,7 +42,12 @@ function run(req, res) {
                     yield new bbddpostgres.BBDDconect().query('INSERT INTO public."PRIORIZADOS_SIN_VISIBILIDAD"("NOC", "FECHA") VALUES (' + "'" + listadoPriorizados[i].noc + "'" + ', ' + "'" + dateNow + "'" + ');');
                     let mailTxt = `El NOC-${listadoPriorizados[i].noc} no posee visibilidad para Everis\
                 \nhttps://noc-mesa.buenosaires.gob.ar/WorkOrder.do?woMode=viewWO&woID=${listadoPriorizados[i].noc}&&fromListView=true`;
-                    yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
+                    try {
+                        yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
+                    }
+                    catch (e) {
+                        logger.error('EMAIL', 'Error al enviar correo: ' + e);
+                    }
                 }
             }
             else {

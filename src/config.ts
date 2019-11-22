@@ -5,5 +5,5 @@ export function get(property:string):any{
 }
 
 export function passDecoder(pass:string){
-    return Buffer.from(pass,'base64').toString("ascii");
+    return Buffer.from(pass,'base64').toString("utf-8");
 }

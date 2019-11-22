@@ -2,16 +2,13 @@ import * as express from 'express'
 import * as config from '../config'
 import * as logger from '../logger';
 import { isNullOrUndefined } from 'util';
-//import * as promisetools from '../tools/PromiseTools';
+import * as bbddpostgres from '../entities/BBDDPostgres';
 
 import * as emailtools from '../tools/EMAILTools';
 import { AsiJira } from '../entities/AsiJira';
 import { Jira } from '../entities/Jira';
 import * as jiraservices from '../externalServices/RESTService/JIRAService';
 import * as asijiraservices from '../externalServices/RESTService/ASIJIRAService';
-//import { rejects } from 'assert';
-// import * as nocervices from '../externalServices/RESTService/NOCService';
-// import * as gsheetservices from '../externalServices/RESTService/GSHEETService';
 
 const JIRACREDENTIALS = config.get("credentials");
 const TASKNAME = 'ASIJIRA TO JIRA CONVERTER';
@@ -24,23 +21,16 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
 	logger.taskBeginInfo(TASKNAME);
     response = res;    
 
-/*
-puntos a definir de negocio.
-    -Alcance: Para que proyectos se utilizara la herramienta.
-    -Que datos deben importarse en Jira interno de acuerdo a las metricas.
-    -Que usuario/s se utilizaran para obtener y crear los Jiras
-    -Definir relacion de estados cuales estados de ASIJira pasan a cerrado el Jira se utilizaron los que figuran con verde en el flow de AsiJira
-
-*/
     const result:JSON[] = [];
     let resultCommentPrintflag:boolean = false;
     let resultStatusPrintflag:boolean = false;
     let resultCreatePrintflag:boolean = false;
+    let resultComponentPrintflag:boolean = false;
     let jiraExistenteFlag:boolean;
     let asiJiraListNotEmptyFlag:boolean = false;
 
     let statusCloseCondition:string[] = ['Listo','CANCELADO','CERRADO','RECHAZADO','VERIFICADO','Implementado','Testing Desaprobado','Instalacion Cancelada QA','Assesment Desaprobado','Instalacion Cancelada HML','Aceptacion Usuario HML Desaprobado','Aceptacion Usuario PROD Desaprobado','Implementado en PRODUCCION','Inst Cancelada PROD','Testing Cancelado','Autorización Rechazada','IMPLEMENTADO EN PROD CON EXCEPCIÓN','Implementacion en Prueba','AUTORIZACION QA CANCELADA','Rechazado por Controles','Resolucíon']
-    let filtroAsiJira:string = 'project = APPSADE AND issuetype in (".ASI Bug SW", ".ASI Incidente") AND resolution = Unresolved AND component = "RIB - Registro de Identificación de Beneficiarios"'
+    let filtroAsiJira:string = 'project = APPSADE AND issuetype in (".ASI Incidente", ".ASI Incidente Crítico", ".ASI Mejora SW", ".ASI Registración de Tareas ", ".ASI Req Correctivo SW", ".ASI Req Evolutivo SW", ".ASI Bug SW")  AND updated >= -1d ORDER BY Rank ASC'
 
     //BUSCO LOS ASIJIRA A IMPORTAR A PARTIR DEL FILTRO
     let asiJiraList = await asijiraservices.getJiraByJql(filtroAsiJira).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined});
@@ -81,7 +71,7 @@ puntos a definir de negocio.
                     }
                 }
             }
-            //SI EL ASIJIRA EXISTE EN JIRA SOLO VERIFICO EL ESTADO Y LOS COMENTARIOS
+            //SI EL ASIJIRA EXISTE EN JIRA SOLO VERIFICO EL ESTADO, LOS COMENTARIOS Y EL COMPONENTE
             if(jiraExistenteFlag){
                 logger.info(TASKLABLE,"Inicio: Se actualiza Jira a partir de "+asijira.getSubject())
                 jira = new Jira(jiraExistente.key);
@@ -121,6 +111,18 @@ puntos a definir de negocio.
                     }            
                 }
 
+                //VERIFICO SI EL COMPONENTE CONTINUA SIENDO EL MISMO
+                let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
+                let componentMapper = (await BBDDcheckDataBase.query('SELECT "ID_COMP_JIRA" FROM "JIRA_COMPONENTS_MAPER" WHERE "ID_COMP_ASIJIRA" = '+asijira.getComponents()[0]+' AND "PROJECT" = \''+asijira.getProject()+'\';'));
+                //SI EL COMPONENTE CAMBIO LO ACTUALIZO
+                if(jira.getComponents()[0] != componentMapper[0].ID_COMP_JIRA){
+                    resultComponentPrintflag = true
+                    jira.deleteComponent(jira.getComponents()[0]);
+                    jira.setComponents(componentMapper[0].ID_COMP_JIRA);
+                    jiraservices.modifyJira(jira).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined});
+                }                            
+ 
+ 
                 logger.info(TASKLABLE,"Fin: Se actualiza Jira: "+jira.getId()+" a partir de AsiJira: "+asijira.getId());
 
                 //SI NO EXISTE EN JIRA LO CREO CON LOS COMENTARIOS QUE TENGA
@@ -135,6 +137,11 @@ puntos a definir de negocio.
                 jira.setPriroriry(asijira.getPriroriry());
                 jira.setLabels(asijira.getProject());
 
+                let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
+                let componentMapper = (await BBDDcheckDataBase.query('SELECT "ID_COMP_JIRA" FROM "JIRA_COMPONENTS_MAPER" WHERE "ID_COMP_ASIJIRA" = '+asijira.getComponents()[0]+' AND "PROJECT" = \''+asijira.getProject()+'\';'));
+        
+                jira.setComponents(componentMapper[0].ID_COMP_JIRA);
+
                 //CREO EL JIRA
                 createdJira = await jiraservices.createJira(jira).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined});
                 resultCreatePrintflag = true;
@@ -148,7 +155,7 @@ puntos a definir de negocio.
                 logger.info(TASKLABLE,"Fin: Se crea Jira: "+jira.getId()+" a partir de AsiJira: "+asijira.getId());
             }
             //ARMO EL JSON PARA EL RESPONSE CON LA DATA DE LOS JIRA PROCESADOS
-            if(resultCommentPrintflag || resultStatusPrintflag ||resultCreatePrintflag){
+            if(resultCommentPrintflag || resultStatusPrintflag ||resultCreatePrintflag || resultComponentPrintflag){
                 let process = {} as any;
                 process.jiraID = jira.getId();
                 process.asiJiraID = asijira.getId();
@@ -162,6 +169,11 @@ puntos a definir de negocio.
                 if(resultStatusPrintflag){
                     process.modifStatus = 'Cambio de estado a '+jira.getStatus();
                 }
+                if(resultComponentPrintflag){
+                    process.modifStatus = 'Cambio de componente a '+jira.getComponents()[0];
+                }
+
+
                 result.push(process);
             }
 
