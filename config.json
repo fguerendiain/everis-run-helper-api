@@ -45,7 +45,7 @@
 		"jira":{
 			"host":"https://steps.everis.com/jiraproy/rest/api/2/",
 			"user":"laparlov",
-			"password":"UmFtMG5pbmZ1bWFibDM="
+			"password":"RnJhbmMwbGFwdXRhbWFkcjM="
 		},
 		"asijira":{
 			"host":"https://asijira.buenosaires.gob.ar/rest/api/2/",

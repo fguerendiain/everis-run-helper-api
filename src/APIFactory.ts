@@ -9,7 +9,7 @@ import * as priorizadosupdate from './tasks/priorizadosUpdate';
 import * as informeMensualPriorizados from './tasks/informeMensualPriorizados';
 import * as convertirBase64 from './tasks/convertirBase64';
 import * as asiJiraToJiraConverter from './tasks/asiJiraToJiraConverter';
-import * as appSade9570 from './tasks/appSade9570';
+//import * as appSade9570 from './tasks/appSade9570';
 
 export function build():Express{
  
@@ -29,7 +29,7 @@ export function build():Express{
 
 
     //REGULATORIOS
-    app.get("/appSade9570", appSade9570.run); //genera nueva transaccion a partir de la anterior, imprime update para actualizar registro de psoc con nueva transaccion.
+//    app.get("/appSade9570", appSade9570.run); //genera nueva transaccion a partir de la anterior, imprime update para actualizar registro de psoc con nueva transaccion.
 
     //DEVELOP
     app.get("/vincularDocumento", vincularDocumento.run);
