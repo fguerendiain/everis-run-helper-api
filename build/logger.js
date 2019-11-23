@@ -53,6 +53,18 @@ function taskEndInfo(msg, filename) {
     }
 }
 exports.taskEndInfo = taskEndInfo;
+function minimal(msg, filename) {
+    logMinimal(msg, filename);
+}
+exports.minimal = minimal;
+function logMinimal(msg, filename) {
+    let message = msg;
+    console.log(message);
+    if (!util_1.isNullOrUndefined(filename)) {
+        logFileWriter(filename, message);
+    }
+    ;
+}
 function log(type, tag, msg, filename) {
     let date = moment().format('YYYY.MM.DD HH:mm:ss.SS') + ': ';
     type = '[' + type + '] ';

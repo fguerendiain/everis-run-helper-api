@@ -78,7 +78,7 @@ class Jira extends Ticket_1.ticket {
                 this.labels = jiraData.fields.labels;
                 //cargo el listado de components
                 for (let i = 0; i < jiraData.fields.components.length; i++) {
-                    this.setComponents(jiraData.fields.components[i].name);
+                    this.setComponents(jiraData.fields.components[i].id);
                 }
                 //cargo el listado de mensajes
                 for (let i = 0; i < jiraComment.total; i++) {

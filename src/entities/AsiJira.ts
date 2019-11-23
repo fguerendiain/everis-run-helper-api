@@ -80,7 +80,7 @@ export class AsiJira extends ticket{
 
             //cargo el listado de components
             for(let i = 0 ; i < jiraData.fields.components.length; i++){
-                this.setComponents(jiraData.fields.components[i].name);
+                this.setComponents(jiraData.fields.components[i].id);
             }
 
 

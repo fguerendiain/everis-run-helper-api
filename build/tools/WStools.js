@@ -21,7 +21,7 @@ function soapRequest(url, xml, callMethod) {
             data: xml,
             timeout: wstimeout,
         }).then((response) => {
-            resolve(JSON.parse('{"' + callMethod + '":' + xmlToJson.toJson(response.data) + '}'));
+            resolve(JSON.parse(escapeSpecialChars(xmlToJson.toJson(response.data))));
             logger.info('SOAP', response.status + ' - ' + response.data);
         }).catch((error) => {
             if (error.response) {
@@ -36,5 +36,12 @@ function soapRequest(url, xml, callMethod) {
     });
 }
 exports.soapRequest = soapRequest;
+;
+function escapeSpecialChars(v_string) {
+    return v_string.replace(/S:/g, '')
+        .replace(/:S/g, '')
+        .replace(/:ns2/g, '')
+        .replace(/ns2:/g, '');
+}
 ;
 //# sourceMappingURL=WStools.js.map

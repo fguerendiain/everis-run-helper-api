@@ -247,8 +247,13 @@ function backlogDiario(req, res) {
             distribucionModulo,
             priorizadosPorRegistro
         };
-        let mailTxt = 'Se envio Backlog Diario';
-        yield emailtools.sendByMail(RESPONSABLE, TASKNAME, mailTxt);
+        // let mailTxt = 'Se envio Backlog Diario';
+        // try{
+        // 	await emailtools.sendByMail(RESPONSABLE,TASKNAME,mailTxt);
+        // }
+        // catch(e){
+        // 	logger.error('EMAIL','Error al enviar correo: '+e);
+        // }
         yield res.status(200).send(backlogJsonResponse);
         logger.taskEndInfo(TASKNAME);
     });

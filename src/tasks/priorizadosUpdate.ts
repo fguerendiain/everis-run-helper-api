@@ -44,7 +44,13 @@ export async function run(req: express.Request, res: express.Response){
                 let mailTxt =
                 `El NOC-${listadoPriorizados[i].noc} no posee visibilidad para Everis\
                 \nhttps://noc-mesa.buenosaires.gob.ar/WorkOrder.do?woMode=viewWO&woID=${listadoPriorizados[i].noc}&&fromListView=true`;
-                await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);            }
+            	try{
+                    await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
+                }
+                catch(e){
+                    logger.error('EMAIL','Error al enviar correo: '+e);
+                }
+            }
         }else{
             //si ya existe el priorizado se verifica el estado de lo contrario se inserta
             let priorizadoExiste = (await new bbddpostgres.BBDDconect().query('SELECT count(*) FROM "PRIORIZADOS" WHERE "FECHA" = '+"'"+dateNow+"'"+' AND "NOC" = '+"'"+listadoPriorizados[i].noc+"'"+';'))[0].count;

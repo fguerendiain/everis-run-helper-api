@@ -10,15 +10,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const config = require("../config");
 const logger = require("../logger");
-//import * as promisetools from '../tools/PromiseTools';
+const bbddpostgres = require("../entities/BBDDPostgres");
 const emailtools = require("../tools/EMAILTools");
 const AsiJira_1 = require("../entities/AsiJira");
 const Jira_1 = require("../entities/Jira");
 const jiraservices = require("../externalServices/RESTService/JIRAService");
 const asijiraservices = require("../externalServices/RESTService/ASIJIRAService");
-//import { rejects } from 'assert';
-// import * as nocervices from '../externalServices/RESTService/NOCService';
-// import * as gsheetservices from '../externalServices/RESTService/GSHEETService';
 const JIRACREDENTIALS = config.get("credentials");
 const TASKNAME = 'ASIJIRA TO JIRA CONVERTER';
 const RESPONSABLE = 'franco.javier.guerendiain@everis.com';
@@ -28,22 +25,15 @@ function createJirafromAsiJira(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         logger.taskBeginInfo(TASKNAME);
         response = res;
-        /*
-        puntos a definir de negocio.
-            -Alcance: Para que proyectos se utilizara la herramienta.
-            -Que datos deben importarse en Jira interno de acuerdo a las metricas.
-            -Que usuario/s se utilizaran para obtener y crear los Jiras
-            -Definir relacion de estados cuales estados de ASIJira pasan a cerrado el Jira se utilizaron los que figuran con verde en el flow de AsiJira
-        
-        */
         const result = [];
         let resultCommentPrintflag = false;
         let resultStatusPrintflag = false;
         let resultCreatePrintflag = false;
+        let resultComponentPrintflag = false;
         let jiraExistenteFlag;
         let asiJiraListNotEmptyFlag = false;
         let statusCloseCondition = ['Listo', 'CANCELADO', 'CERRADO', 'RECHAZADO', 'VERIFICADO', 'Implementado', 'Testing Desaprobado', 'Instalacion Cancelada QA', 'Assesment Desaprobado', 'Instalacion Cancelada HML', 'Aceptacion Usuario HML Desaprobado', 'Aceptacion Usuario PROD Desaprobado', 'Implementado en PRODUCCION', 'Inst Cancelada PROD', 'Testing Cancelado', 'Autorización Rechazada', 'IMPLEMENTADO EN PROD CON EXCEPCIÓN', 'Implementacion en Prueba', 'AUTORIZACION QA CANCELADA', 'Rechazado por Controles', 'Resolucíon'];
-        let filtroAsiJira = 'project = APPSADE AND issuetype in (".ASI Bug SW", ".ASI Incidente") AND resolution = Unresolved AND component = "RIB - Registro de Identificación de Beneficiarios"';
+        let filtroAsiJira = 'project = APPSADE AND issuetype in (".ASI Incidente", ".ASI Incidente Crítico", ".ASI Mejora SW", ".ASI Registración de Tareas ", ".ASI Req Correctivo SW", ".ASI Req Evolutivo SW", ".ASI Bug SW")  AND updated >= -1d ORDER BY Rank ASC';
         //BUSCO LOS ASIJIRA A IMPORTAR A PARTIR DEL FILTRO
         let asiJiraList = yield asijiraservices.getJiraByJql(filtroAsiJira).catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; });
         //ARMO UN ARRAY CON LOS ID DE LOS ASIJIRA ENCONTRADOS
@@ -77,7 +67,7 @@ function createJirafromAsiJira(req, res) {
                         }
                     }
                 }
-                //SI EL ASIJIRA EXISTE EN JIRA SOLO VERIFICO EL ESTADO Y LOS COMENTARIOS
+                //SI EL ASIJIRA EXISTE EN JIRA SOLO VERIFICO EL ESTADO, LOS COMENTARIOS Y EL COMPONENTE
                 if (jiraExistenteFlag) {
                     logger.info(TASKLABLE, "Inicio: Se actualiza Jira a partir de " + asijira.getSubject());
                     jira = new Jira_1.Jira(jiraExistente.key);
@@ -116,6 +106,16 @@ function createJirafromAsiJira(req, res) {
                             yield jiraservices.setTransicionJira(jiraExistente.id, closeMessage, '21').catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; });
                         }
                     }
+                    //VERIFICO SI EL COMPONENTE CONTINUA SIENDO EL MISMO
+                    let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
+                    let componentMapper = (yield BBDDcheckDataBase.query('SELECT "ID_COMP_JIRA" FROM "JIRA_COMPONENTS_MAPER" WHERE "ID_COMP_ASIJIRA" = ' + asijira.getComponents()[0] + ' AND "PROJECT" = \'' + asijira.getProject() + '\';'));
+                    //SI EL COMPONENTE CAMBIO LO ACTUALIZO
+                    if (jira.getComponents()[0] != componentMapper[0].ID_COMP_JIRA) {
+                        resultComponentPrintflag = true;
+                        jira.deleteComponent(jira.getComponents()[0]);
+                        jira.setComponents(componentMapper[0].ID_COMP_JIRA);
+                        jiraservices.modifyJira(jira).catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; });
+                    }
                     logger.info(TASKLABLE, "Fin: Se actualiza Jira: " + jira.getId() + " a partir de AsiJira: " + asijira.getId());
                     //SI NO EXISTE EN JIRA LO CREO CON LOS COMENTARIOS QUE TENGA
                 }
@@ -128,6 +128,9 @@ function createJirafromAsiJira(req, res) {
                     jira.setAssigne(JIRACREDENTIALS.jira.user);
                     jira.setPriroriry(asijira.getPriroriry());
                     jira.setLabels(asijira.getProject());
+                    let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
+                    let componentMapper = (yield BBDDcheckDataBase.query('SELECT "ID_COMP_JIRA" FROM "JIRA_COMPONENTS_MAPER" WHERE "ID_COMP_ASIJIRA" = ' + asijira.getComponents()[0] + ' AND "PROJECT" = \'' + asijira.getProject() + '\';'));
+                    jira.setComponents(componentMapper[0].ID_COMP_JIRA);
                     //CREO EL JIRA
                     createdJira = yield jiraservices.createJira(jira).catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; });
                     resultCreatePrintflag = true;
@@ -142,7 +145,7 @@ function createJirafromAsiJira(req, res) {
                     logger.info(TASKLABLE, "Fin: Se crea Jira: " + jira.getId() + " a partir de AsiJira: " + asijira.getId());
                 }
                 //ARMO EL JSON PARA EL RESPONSE CON LA DATA DE LOS JIRA PROCESADOS
-                if (resultCommentPrintflag || resultStatusPrintflag || resultCreatePrintflag) {
+                if (resultCommentPrintflag || resultStatusPrintflag || resultCreatePrintflag || resultComponentPrintflag) {
                     let process = {};
                     process.jiraID = jira.getId();
                     process.asiJiraID = asijira.getId();
@@ -154,6 +157,9 @@ function createJirafromAsiJira(req, res) {
                     }
                     if (resultStatusPrintflag) {
                         process.modifStatus = 'Cambio de estado a ' + jira.getStatus();
+                    }
+                    if (resultComponentPrintflag) {
+                        process.modifStatus = 'Cambio de componente a ' + jira.getComponents()[0];
                     }
                     result.push(process);
                 }
