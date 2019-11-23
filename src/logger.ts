@@ -50,7 +50,17 @@ export function taskEndInfo(msg:string, filename?:string){
     }
 }
 
+export function minimal(msg, filename:string){
+        logMinimal(msg, filename);
+}
 
+function logMinimal(msg:string, filename:string){
+    let message = msg; 
+    console.log(message);
+        if(!isNullOrUndefined(filename)){
+            logFileWriter(filename,message)
+        };
+}
 
 
 function log(type:string, tag:string, msg:string, filename?:string){
