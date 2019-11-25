@@ -14,11 +14,13 @@ const JIRACREDENTIALS = config.get("credentials");
 const TASKNAME = 'ASIJIRA TO JIRA CONVERTER';
 const RESPONSABLE = 'franco.javier.guerendiain@everis.com';
 const TASKLABLE = 'ASI JIRA CONVERTER';
+const TASKLOGFILE = 'asiJiraToJiraConverter'
 
 let response:express.Response;
 
 export async function createJirafromAsiJira(req: express.Request, res: express.Response){
-	logger.taskBeginInfo(TASKNAME);
+
+    logger.taskBeginInfo(TASKNAME,TASKLOGFILE);
     response = res;    
 
     const result:JSON[] = [];
@@ -30,17 +32,19 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
     let asiJiraListNotEmptyFlag:boolean = false;
 
     let statusCloseCondition:string[] = ['Listo','CANCELADO','CERRADO','RECHAZADO','VERIFICADO','Implementado','Testing Desaprobado','Instalacion Cancelada QA','Assesment Desaprobado','Instalacion Cancelada HML','Aceptacion Usuario HML Desaprobado','Aceptacion Usuario PROD Desaprobado','Implementado en PRODUCCION','Inst Cancelada PROD','Testing Cancelado','Autorización Rechazada','IMPLEMENTADO EN PROD CON EXCEPCIÓN','Implementacion en Prueba','AUTORIZACION QA CANCELADA','Rechazado por Controles','Resolucíon']
-    let filtroAsiJira:string = 'project = APPSADE AND issuetype in (".ASI Incidente", ".ASI Incidente Crítico", ".ASI Mejora SW", ".ASI Registración de Tareas ", ".ASI Req Correctivo SW", ".ASI Req Evolutivo SW", ".ASI Bug SW")  AND updated >= -1d ORDER BY Rank ASC'
+    let filtroAsiJira:string = 'project = APPSADE AND issuetype in (".ASI Incidente", ".ASI Incidente Crítico", ".ASI Mejora SW", ".ASI Registración de Tareas ", ".ASI Req Correctivo SW", ".ASI Req Evolutivo SW", ".ASI Bug SW") AND (created >= -3d OR updated >= -3d)&maxResults=300';
 
     //BUSCO LOS ASIJIRA A IMPORTAR A PARTIR DEL FILTRO
     let asiJiraList = await asijiraservices.getJiraByJql(filtroAsiJira).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined});
 
     //ARMO UN ARRAY CON LOS ID DE LOS ASIJIRA ENCONTRADOS
     let idJira:string[] = [];
-    if(asiJiraList.total != 0){
+    if(!isNullOrUndefined(asiJiraList) && asiJiraList.total != 0){
         for(let i = 0; i < asiJiraList.total; i++){
-            idJira.push(asiJiraList.issues[i].key);
-            asiJiraListNotEmptyFlag = true
+            if(!isNullOrUndefined(asiJiraList.issues[i])){
+                idJira.push(asiJiraList.issues[i].key);
+                asiJiraListNotEmptyFlag = true
+            }
         }
     }
 
@@ -52,7 +56,7 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
             let asijira:AsiJira = new AsiJira(idJira[nro]);
             await asijira.fillInstanceByJiraId();
 
-            let jiraExist = await jiraservices.getJiraByText(asijira.getId()).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined});
+            let jiraExist = await jiraservices.getJiraByText(asijira.getId()+'+').catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined});
             let createdJira;
             let jiraExistente = null;
 
@@ -60,9 +64,10 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
             resultCommentPrintflag = false;
             resultStatusPrintflag = false;
             resultCreatePrintflag = false;
+            resultComponentPrintflag = false;
 
             //SI ENCUENTRA MAS DE UN JIRA CREADO VALIDO QUE SE TRATE DEL ASIJIRA BUSCADO
-            if(jiraExist.total != 0){
+            if(!isNullOrUndefined(jiraExist.total) && jiraExist.total != 0){
                 for(let i = 0; i < jiraExist.total; i++){
                     let summaryToCompare:string = jiraExist.issues[i].fields.summary;
                     if (summaryToCompare.substr(0,asijira.getId().length) == asijira.getId()){
@@ -73,15 +78,17 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
             }
             //SI EL ASIJIRA EXISTE EN JIRA SOLO VERIFICO EL ESTADO, LOS COMENTARIOS Y EL COMPONENTE
             if(jiraExistenteFlag){
-                logger.info(TASKLABLE,"Inicio: Se actualiza Jira a partir de "+asijira.getSubject())
+                jiraExistenteFlag = false;
                 jira = new Jira(jiraExistente.key);
                 await jira.fillInstanceByJiraId();
+
+                logger.info(TASKLABLE,"Inicio: Se actualiza Jira: "+jira.getId()+" a partir de AsiJira: "+asijira.getId(),TASKLOGFILE);
 
                 //VERIFICO LOS COMENTARIOS
                 for (let i= 0; i < asijira.getComments().length; i++){
                     let v_flagAddCommentary:boolean = true;
                     for (let e= 0; e < jira.getComments().length; e++){
-                        if(asijira.getComments()[i].id == (jira.getComments()[e].body).substr(41,asijira.getComments()[i].id)){
+                        if(asijira.getComments()[i].id == (jira.getComments()[e].body).substr(41,asijira.getComments()[i].id.length)){
                             v_flagAddCommentary = false
                         }
                     }
@@ -115,7 +122,7 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
                 let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
                 let componentMapper = (await BBDDcheckDataBase.query('SELECT "ID_COMP_JIRA" FROM "JIRA_COMPONENTS_MAPER" WHERE "ID_COMP_ASIJIRA" = '+asijira.getComponents()[0]+' AND "PROJECT" = \''+asijira.getProject()+'\';'));
                 //SI EL COMPONENTE CAMBIO LO ACTUALIZO
-                if(jira.getComponents()[0] != componentMapper[0].ID_COMP_JIRA){
+                if(!isNullOrUndefined(componentMapper[0]) && jira.getComponents()[0] != componentMapper[0].ID_COMP_JIRA){
                     resultComponentPrintflag = true
                     jira.deleteComponent(jira.getComponents()[0]);
                     jira.setComponents(componentMapper[0].ID_COMP_JIRA);
@@ -123,36 +130,42 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
                 }                            
  
  
-                logger.info(TASKLABLE,"Fin: Se actualiza Jira: "+jira.getId()+" a partir de AsiJira: "+asijira.getId());
+                logger.info(TASKLABLE,"Fin: Se actualiza Jira: "+jira.getId()+" a partir de AsiJira: "+asijira.getId(),TASKLOGFILE);
 
                 //SI NO EXISTE EN JIRA LO CREO CON LOS COMENTARIOS QUE TENGA
             }else{
-                logger.info(TASKLABLE,"Inicio: Se crea "+asijira.getSubject()+" inexisitente en Jira")
+                if(!isNullOrUndefined(asijira.getSubject())){
+                    logger.info(TASKLABLE,"Inicio: Se crea "+asijira.getSubject()+" inexisitente en Jira",TASKLOGFILE)
 
-                jira = new Jira();
-                jira.setSubject(asijira.getSubject());
-                jira.setDescription(asijira.getDescription());        
-                jira.setType(asijira.getType());
-                jira.setAssigne(JIRACREDENTIALS.jira.user);
-                jira.setPriroriry(asijira.getPriroriry());
-                jira.setLabels(asijira.getProject());
-
-                let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
-                let componentMapper = (await BBDDcheckDataBase.query('SELECT "ID_COMP_JIRA" FROM "JIRA_COMPONENTS_MAPER" WHERE "ID_COMP_ASIJIRA" = '+asijira.getComponents()[0]+' AND "PROJECT" = \''+asijira.getProject()+'\';'));
-        
-                jira.setComponents(componentMapper[0].ID_COMP_JIRA);
-
-                //CREO EL JIRA
-                createdJira = await jiraservices.createJira(jira).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined});
-                resultCreatePrintflag = true;
-                jira.setId(createdJira.body.key);
-                //CREO LOS COMENTARIOS
-                for (let i= 0; i < asijira.getComments().length; i++){
-                    jira.setComments(asijira.getComments()[i].body,asijira.getComments()[i].assignee,asijira.getComments()[i].created,asijira.getComments()[i].id);
-                    let newBody:string = "---------------------------\r\n\tCommentId: "+asijira.getComments()[i].id+"\r\n\t"+" CommentAssignee: "+asijira.getComments()[i].assignee+"\r\n---------------------------\r\n"+asijira.getComments()[i].body;
-                    await jiraservices.addJiraCommentsById(createdJira.body.id,newBody).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined})                
-                };
-                logger.info(TASKLABLE,"Fin: Se crea Jira: "+jira.getId()+" a partir de AsiJira: "+asijira.getId());
+                    jira = new Jira();
+                    jira.setSubject(asijira.getSubject());
+                    jira.setDescription(asijira.getDescription());        
+                    jira.setType(asijira.getType());
+                    jira.setAssigne(JIRACREDENTIALS.jira.user);
+                    jira.setPriroriry(asijira.getPriroriry());
+                    jira.setLabels(asijira.getProject());
+    
+                    let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
+                    let componentMapper = (await BBDDcheckDataBase.query('SELECT "ID_COMP_JIRA" FROM "JIRA_COMPONENTS_MAPER" WHERE "ID_COMP_ASIJIRA" = '+asijira.getComponents()[0]+' AND "PROJECT" = \''+asijira.getProject()+'\';'));
+                    
+                    if(!isNullOrUndefined(componentMapper[0])){
+                        jira.setComponents(componentMapper[0].ID_COMP_JIRA);
+                    }
+    
+                    //CREO EL JIRA
+                    createdJira = await jiraservices.createJira(jira).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined});
+                    if(!isNullOrUndefined(createdJira)){
+                        resultCreatePrintflag = true;
+                        jira.setId(createdJira.body.key);
+                        //CREO LOS COMENTARIOS
+                        for (let i= 0; i < asijira.getComments().length; i++){
+                            jira.setComments(asijira.getComments()[i].body,asijira.getComments()[i].assignee,asijira.getComments()[i].created,asijira.getComments()[i].id);
+                            let newBody:string = "---------------------------\r\n\tCommentId: "+asijira.getComments()[i].id+"\r\n\t"+" CommentAssignee: "+asijira.getComments()[i].assignee+"\r\n---------------------------\r\n"+asijira.getComments()[i].body;
+                            await jiraservices.addJiraCommentsById(createdJira.body.id,newBody).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined})                
+                        };
+                    }
+                    logger.info(TASKLABLE,"Fin: Se crea Jira: "+jira.getId()+" a partir de AsiJira: "+asijira.getId(),TASKLOGFILE);
+                }
             }
             //ARMO EL JSON PARA EL RESPONSE CON LA DATA DE LOS JIRA PROCESADOS
             if(resultCommentPrintflag || resultStatusPrintflag ||resultCreatePrintflag || resultComponentPrintflag){
@@ -170,7 +183,7 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
                     process.modifStatus = 'Cambio de estado a '+jira.getStatus();
                 }
                 if(resultComponentPrintflag){
-                    process.modifStatus = 'Cambio de componente a '+jira.getComponents()[0];
+                    process.modifComponent = 'Cambio de componente a '+jira.getComponents()[0];
                 }
 
 
@@ -182,7 +195,8 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
 
     await response.status(200).send(result);
 
-    logger.taskEndInfo(TASKNAME);
+    logger.infoFullMessage(TASKLABLE,JSON.stringify(result),TASKLOGFILE,true)
+    logger.taskEndInfo(TASKNAME,TASKLOGFILE);
 
     let mailTxt = 'Integracion ASIJira - Jira';
     await emailtools.sendByMail(RESPONSABLE,TASKNAME,mailTxt);

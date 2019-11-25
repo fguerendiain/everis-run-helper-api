@@ -1,1 +1,0 @@
-transaccion anterior: 117887 | transaccion nueva: 117889 | ID_BENEFICIO = 181665

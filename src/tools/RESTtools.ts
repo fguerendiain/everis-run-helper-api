@@ -94,11 +94,11 @@ request(v_options,(err,response)=>{
             logger.error("REST1",'Call Method: ' + callMethod + ' -  response error: ' + err);
             return reject(err);
         }else{
+            logger.info("REST",'response: ' + response.statusCode + " - Call Method: " + callMethod + " - " + escapeSpecialChars(JSON.stringify(response)));
             try{
-                logger.info("REST",'response: ' + response.statusCode + " - Call Method: " + callMethod + " - " + escapeSpecialChars(JSON.stringify(response)));
                 return resolve(JSON.parse(response.body));
             }catch(err){
-                logger.error("REST",'Call Method: ' + callMethod + " - " + err);
+//                logger.error("REST",'Call Method: ' + callMethod + " - " + err);
                 return resolve(response);
             }
         }
