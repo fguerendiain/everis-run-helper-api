@@ -87,6 +87,13 @@
 			"error":"ERROR",
 			"finalizado":"FINALIZADO"
 		}
+	},
+	"informeBacklogDiario":{
+		"estadoProceso":{
+			"enProgreso":"EN PROGRESO",
+			"error":"ERROR",
+			"finalizado":"FINALIZADO"
+		}
 	}
 }
 
