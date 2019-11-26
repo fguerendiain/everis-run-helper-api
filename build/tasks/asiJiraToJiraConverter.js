@@ -17,7 +17,9 @@ const AsiJira_1 = require("../entities/AsiJira");
 const Jira_1 = require("../entities/Jira");
 const jiraservices = require("../externalServices/RESTService/JIRAService");
 const asijiraservices = require("../externalServices/RESTService/ASIJIRAService");
+const checktask = require("./checkTask");
 const JIRACREDENTIALS = config.get("credentials");
+const PROCESSSTATUS = config.get("asiJiraToJiraConverter").estadoProceso;
 const TASKNAME = 'ASIJIRA TO JIRA CONVERTER';
 const RESPONSABLE = 'franco.javier.guerendiain@everis.com';
 const TASKLABLE = 'ASI JIRA CONVERTER';
@@ -27,6 +29,8 @@ function createJirafromAsiJira(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         logger.taskBeginInfo(TASKNAME, TASKLOGFILE);
         response = res;
+        let processID = yield checktask.saveStatus(0, TASKNAME, PROCESSSTATUS.enProgreso, 'Inicia proceso');
+        response.status(200).send(processID);
         const result = [];
         let resultCommentPrintflag = false;
         let resultStatusPrintflag = false;
@@ -51,6 +55,7 @@ function createJirafromAsiJira(req, res) {
         //SI EXISTEN RESULTADOS COMIENZO EL PROCESO
         if (asiJiraListNotEmptyFlag) {
             for (let nro = 0; nro < idJira.length; nro++) {
+                yield checktask.saveStatus(processID.id, TASKNAME, PROCESSSTATUS.enProgreso, 'Actualizando issues');
                 let jira;
                 let asijira = new AsiJira_1.AsiJira(idJira[nro]);
                 yield asijira.fillInstanceByJiraId();
@@ -177,7 +182,7 @@ function createJirafromAsiJira(req, res) {
                 }
             }
         }
-        yield response.status(200).send(result);
+        yield checktask.saveStatus(processID.id, TASKNAME, PROCESSSTATUS.finalizado, 'Proceso finalizado', JSON.stringify(result));
         logger.infoFullMessage(TASKLABLE, JSON.stringify(result), TASKLOGFILE, true);
         logger.taskEndInfo(TASKNAME, TASKLOGFILE);
         let mailTxt = 'Integracion ASIJira - Jira';

@@ -80,6 +80,13 @@
 	},
 	"feriados":{
 		"host" : "http://nolaborables.com.ar/api/v2/feriados"
+	},
+	"asiJiraToJiraConverter":{
+		"estadoProceso":{
+			"enProgreso":"EN PROGRESO",
+			"error":"ERROR",
+			"finalizado":"FINALIZADO"
+		}
 	}
 }
 

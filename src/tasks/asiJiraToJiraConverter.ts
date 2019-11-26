@@ -9,8 +9,10 @@ import { AsiJira } from '../entities/AsiJira';
 import { Jira } from '../entities/Jira';
 import * as jiraservices from '../externalServices/RESTService/JIRAService';
 import * as asijiraservices from '../externalServices/RESTService/ASIJIRAService';
+import * as checktask from './checkTask';
 
 const JIRACREDENTIALS = config.get("credentials");
+const PROCESSSTATUS = config.get("asiJiraToJiraConverter").estadoProceso;
 const TASKNAME = 'ASIJIRA TO JIRA CONVERTER';
 const RESPONSABLE = 'franco.javier.guerendiain@everis.com';
 const TASKLABLE = 'ASI JIRA CONVERTER';
@@ -22,6 +24,11 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
 
     logger.taskBeginInfo(TASKNAME,TASKLOGFILE);
     response = res;    
+
+    let processID = await checktask.saveStatus(0,TASKNAME,PROCESSSTATUS.enProgreso,'Inicia proceso');
+
+    response.status(200).send(processID);
+    
 
     const result:JSON[] = [];
     let resultCommentPrintflag:boolean = false;
@@ -52,6 +59,9 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
     if (asiJiraListNotEmptyFlag){
         for(let nro = 0; nro < idJira.length; nro++)
         {    
+
+            await checktask.saveStatus(processID.id,TASKNAME,PROCESSSTATUS.enProgreso,'Actualizando issues');
+        
             let jira:Jira;
             let asijira:AsiJira = new AsiJira(idJira[nro]);
             await asijira.fillInstanceByJiraId();
@@ -192,8 +202,7 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
 
         }
     }
-
-    await response.status(200).send(result);
+    await checktask.saveStatus(processID.id,TASKNAME,PROCESSSTATUS.finalizado,'Proceso finalizado',JSON.stringify(result));
 
     logger.infoFullMessage(TASKLABLE,JSON.stringify(result),TASKLOGFILE,true)
     logger.taskEndInfo(TASKNAME,TASKLOGFILE);
@@ -202,5 +211,3 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
     await emailtools.sendByMail(RESPONSABLE,TASKNAME,mailTxt);
 
 }
-
-
