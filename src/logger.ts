@@ -11,11 +11,16 @@ const PRINTLENGTH = config.get("logs").printLength;
 
 export function info(tag:string, msg:string, filename?:string){
     if(isNullOrUndefined(filename)){
-        log('INFO', tag, msg,LOGFILENAME);
+        log('INFO', tag, msg);
     }else{
         log('INFO', tag, msg, filename);
     }
 }
+
+export function infoFullMessage(tag:string, msg:string, filename:string,cutLog:boolean){
+    log('INFO', tag, msg, filename,cutLog);
+}
+
 
 export function error(tag:string, msg:string, filename?:string){
     if(isNullOrUndefined(filename)){
@@ -63,15 +68,22 @@ function logMinimal(msg:string, filename:string){
 }
 
 
-function log(type:string, tag:string, msg:string, filename?:string){
+function log(type:string, tag:string, msg:string, filename?:string,cutLog?:boolean){
 	let date:string = moment().format('YYYY.MM.DD HH:mm:ss.SS') + ': ';
 	type = '['+type+'] ';
     tag = tag+': ';
-    let message = date + type + tag + cutLogString(msg); 
+    let mesAux:string = msg;
+    if(isNullOrUndefined(cutLog) || cutLog == false){
+        mesAux = cutLogString(msg);
+    }
+    let message = date + type + tag + mesAux; 
     console.log(message);
-        if(!isNullOrUndefined(filename)){
-            logFileWriter(filename,message)
-        };
+    if(isNullOrUndefined(filename)){
+        logFileWriter(LOGFILENAME,message)
+    }else{
+        logFileWriter(filename,message)
+        logFileWriter(LOGFILENAME,message)
+    };
 }
 
 function logFileWriter(filename,msg){

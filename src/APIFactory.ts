@@ -9,7 +9,7 @@ import * as priorizadosupdate from './tasks/priorizadosUpdate';
 import * as informeMensualPriorizados from './tasks/informeMensualPriorizados';
 import * as convertirBase64 from './tasks/convertirBase64';
 import * as asiJiraToJiraConverter from './tasks/asiJiraToJiraConverter';
-//import * as appSade9570 from './tasks/appSade9570';
+import * as checkTask from './tasks/checkTask';
 
 export function build():Express{
  
@@ -26,7 +26,7 @@ export function build():Express{
     app.get("/informemensual/priorizados/:date", informeMensualPriorizados.getPriorizadosByDate); //devuelve el total de priorizados del mes
     app.get("/informemensual/backlog/:date", informeMensualPriorizados.getEverisNocByDate); //devuelve el total de backlog del mes
     app.get("/asijiratojiraconverter", asiJiraToJiraConverter.createJirafromAsiJira); //importa los jiraAsi a Jira
-
+    app.get("/checktask/:id", checkTask.checkTaskProcessStatusById); //devuelve estado de ejecucion de tarea
 
     //REGULATORIOS
 //    app.get("/appSade9570", appSade9570.run); //genera nueva transaccion a partir de la anterior, imprime update para actualizar registro de psoc con nueva transaccion.

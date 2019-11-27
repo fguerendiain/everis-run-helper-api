@@ -17,14 +17,19 @@ const priorizadosupdate = require("../tasks/priorizadosUpdate");
 const moment = require("moment");
 const bbddpostgres = require("../entities/BBDDPostgres");
 const util_1 = require("util");
+const checktask = require("./checkTask");
+const config = require("../config");
 const TASKNAME = 'INFORME BACKLOG DIARIO';
 const RESPONSABLE = 'franco.javier.guerendiain@everis.com';
+const PROCESSSTATUS = config.get("informeBacklogDiario").estadoProceso;
 //GENERAR EL INFORME DE BACKLOG
 function backlogDiario(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         logger.taskBeginInfo(TASKNAME);
         let date = moment().subtract(1, 'days').format('YYYYMMDD');
         let save = false;
+        let processID = yield checktask.saveStatus(0, TASKNAME, PROCESSSTATUS.enProgreso, 'Inicia Proceso');
+        yield res.status(200).send(processID);
         //si el metodo es POST graba el backlog en la BBDD a menos que ya exista
         if (req.method == 'POST') {
             save = true;
@@ -63,35 +68,31 @@ function backlogDiario(req, res) {
         if (util_1.isNullOrUndefined(queryNocsIdEnBandeja)) {
             let mailTxt = 'error de servicio externo al obtener Tickets en bandeja';
             yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
-            yield res.status(200).send('{"message":"' + mailTxt + '"}');
             logger.taskEndInfo(TASKNAME);
             return;
         }
         if (util_1.isNullOrUndefined(queryJIRACreados)) {
             let mailTxt = 'error de servicio externo al obtener Tickets creados';
             yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
-            yield res.status(200).send('{"message":"' + mailTxt + '"}');
             logger.taskEndInfo(TASKNAME);
             return;
         }
         if (util_1.isNullOrUndefined(queryJIRAResueltos)) {
             let mailTxt = 'error de servicio externo al obtener Tickets resueltos';
             yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
-            yield res.status(200).send('{"message":"' + mailTxt + '"}');
             logger.taskEndInfo(TASKNAME);
             return;
         }
         if (util_1.isNullOrUndefined(queryJIRAReOpen)) {
             let mailTxt = 'error de servicio externo al obtener Tickets reabiertos';
             yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
-            yield res.status(200).send('{"message":"' + mailTxt + '"}');
             logger.taskEndInfo(TASKNAME);
             return;
         }
         if (util_1.isNullOrUndefined(quwryJIRARepetitivos)) {
             let mailTxt = 'error de servicio externo al obtener Tickets repetitivos';
+            yield checktask.saveStatus(processID.id, TASKNAME, PROCESSSTATUS.error, mailTxt);
             yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
-            yield res.status(200).send('{"message":"' + mailTxt + '"}');
             logger.taskEndInfo(TASKNAME);
             return;
         }
@@ -247,14 +248,7 @@ function backlogDiario(req, res) {
             distribucionModulo,
             priorizadosPorRegistro
         };
-        // let mailTxt = 'Se envio Backlog Diario';
-        // try{
-        // 	await emailtools.sendByMail(RESPONSABLE,TASKNAME,mailTxt);
-        // }
-        // catch(e){
-        // 	logger.error('EMAIL','Error al enviar correo: '+e);
-        // }
-        yield res.status(200).send(backlogJsonResponse);
+        yield checktask.saveStatus(processID.id, TASKNAME, PROCESSSTATUS.finalizado, 'Proceso Finalizado', JSON.stringify(backlogJsonResponse));
         logger.taskEndInfo(TASKNAME);
     });
 }

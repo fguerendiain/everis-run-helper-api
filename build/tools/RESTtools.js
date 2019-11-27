@@ -81,12 +81,12 @@ function queryApiRest(v_options, resolve, reject, callMethod) {
             return reject(err);
         }
         else {
+            logger.info("REST", 'response: ' + response.statusCode + " - Call Method: " + callMethod + " - " + escapeSpecialChars(JSON.stringify(response)));
             try {
-                logger.info("REST", 'response: ' + response.statusCode + " - Call Method: " + callMethod + " - " + escapeSpecialChars(JSON.stringify(response)));
                 return resolve(JSON.parse(response.body));
             }
             catch (err) {
-                logger.error("REST", 'Call Method: ' + callMethod + " - " + err);
+                //                logger.error("REST",'Call Method: ' + callMethod + " - " + err);
                 return resolve(response);
             }
         }

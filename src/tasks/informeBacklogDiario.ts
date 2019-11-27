@@ -8,10 +8,13 @@ import * as priorizadosupdate from '../tasks/priorizadosUpdate';
 import * as moment from 'moment';
 import * as bbddpostgres from '../entities/BBDDPostgres';
 import { isNullOrUndefined } from 'util';
+import * as checktask from './checkTask';
+import * as config from '../config'
 
 
 const TASKNAME = 'INFORME BACKLOG DIARIO'
 const RESPONSABLE = 'franco.javier.guerendiain@everis.com'
+const PROCESSSTATUS = config.get("informeBacklogDiario").estadoProceso;
 
 //GENERAR EL INFORME DE BACKLOG
 export async function backlogDiario(req: express.Request, res: express.Response){
@@ -19,6 +22,11 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 	logger.taskBeginInfo(TASKNAME);
 	let date:string = moment().subtract(1, 'days').format('YYYYMMDD');
 	let save = false;
+
+	let processID = await checktask.saveStatus(0,TASKNAME,PROCESSSTATUS.enProgreso,'Inicia Proceso');
+
+	await res.status(200).send(processID);
+
 
 	//si el metodo es POST graba el backlog en la BBDD a menos que ya exista
 	if(req.method == 'POST'){
@@ -63,38 +71,35 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 	if(isNullOrUndefined(queryNocsIdEnBandeja)){
 		let mailTxt = 'error de servicio externo al obtener Tickets en bandeja';
 		await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
-		await res.status(200).send('{"message":"'+mailTxt+'"}');
 		logger.taskEndInfo(TASKNAME);
 		return;
 	}
 	if(isNullOrUndefined(queryJIRACreados)){
 		let mailTxt = 'error de servicio externo al obtener Tickets creados';
 		await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
-		await res.status(200).send('{"message":"'+mailTxt+'"}');
 		logger.taskEndInfo(TASKNAME);
 		return;
 	}
 	if(isNullOrUndefined(queryJIRAResueltos)){
 		let mailTxt = 'error de servicio externo al obtener Tickets resueltos';
 		await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
-		await res.status(200).send('{"message":"'+mailTxt+'"}');
 		logger.taskEndInfo(TASKNAME);
 		return;
 	}
 	if(isNullOrUndefined(queryJIRAReOpen)){
 		let mailTxt = 'error de servicio externo al obtener Tickets reabiertos';
 		await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
-		await res.status(200).send('{"message":"'+mailTxt+'"}');
 		logger.taskEndInfo(TASKNAME);
 		return;
 	}
 	if(isNullOrUndefined(quwryJIRARepetitivos)){
 		let mailTxt = 'error de servicio externo al obtener Tickets repetitivos';
+		await checktask.saveStatus(processID.id,TASKNAME,PROCESSSTATUS.error,mailTxt);
 		await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
-		await res.status(200).send('{"message":"'+mailTxt+'"}');
 		logger.taskEndInfo(TASKNAME);
 		return;
 	}
+
 
 	//genero un array de objetos noc
 	for(let i = 0; i < queryNocsIdEnBandeja.length; i++){
@@ -181,7 +186,6 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 
 	if(save){
 
-
 		//INSERTAR LOS DATOS EN LA BBDD	
 		let v_saveBacklogBBDDQuery:string;
 		v_saveBacklogBBDDQuery = 'INSERT INTO "BACKLOG"("FECHA","PRIORIZADO_BAJA","PRIORIZADO_ALTA","PRIORIZADO_URGENTE", "CREADAS","RESUELTAS","PRIORIZADO_PORCENTUAL_BAJA","PRIORIZADO_PORCENTUAL_ALTA",';
@@ -229,6 +233,7 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 		datosUltimos6DiasArray.push(datosUltimos6Dias);
 	}
 
+
 	//armo el JSON
 	for(let i = 0; i < backlogLastDays.length ; i++){
 		datosUltimos6Dias = {
@@ -262,14 +267,7 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 		priorizadosPorRegistro
 	} 
 
-	// let mailTxt = 'Se envio Backlog Diario';
-	// try{
-	// 	await emailtools.sendByMail(RESPONSABLE,TASKNAME,mailTxt);
-	// }
-	// catch(e){
-	// 	logger.error('EMAIL','Error al enviar correo: '+e);
-	// }
-	await res.status(200).send(backlogJsonResponse);
+	await checktask.saveStatus(processID.id,TASKNAME,PROCESSSTATUS.finalizado,'Proceso Finalizado',JSON.stringify(backlogJsonResponse));
 	logger.taskEndInfo(TASKNAME);
 }
 
@@ -287,6 +285,7 @@ export async function searchBacklogByDate(req: express.Request, res: express.Res
 		BacklogByDate,
 		priorizadosPorRegistro,
 	} 
+
 
 	await res.status(200).send(backlogJsonResponse);
 	logger.taskEndInfo(TASKNAME);

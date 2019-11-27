@@ -59,8 +59,8 @@ export class AsiJira extends ticket{
         let jiraComment = await asijiraservices.getJiraCommentsById(this.getId()).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined});
 //        let jiraWorklog = await asijiraservices.getJiraWorklogById(this.getId()).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined});
 
-        if(jiraData.errorMessages == "La Incidencia no Existe") {
-            logger.error('JIRA',this.getId()+': La Incidencia no Existe')
+        if(isNullOrUndefined(jiraData) || jiraData.errorMessages == "La Incidencia no Existe") {
+            logger.info('JIRA',this.getId()+': La Incidencia no Existe')
             return null;
         }else{
             this.setId(jiraData.key);
@@ -68,12 +68,17 @@ export class AsiJira extends ticket{
             this.setCreated(jiraData.fields.created);
             this.setUpdated(jiraData.fields.updated);
             this.setDescription("https://asijira.buenosaires.gob.ar/browse/"+jiraData.key+"\r\n\r\n"+jiraData.fields.description+"\r\n\r\n------------------\r\nDATOS DE INFORMADOR:\r\n"+jiraData.fields.reporter.displayName+"\r\n"+jiraData.fields.reporter.emailAddress);
-            this.setType(jiraData.fields.issuetype.name);
-            this.setStatus(jiraData.fields.status.name);
+            if(!isNullOrUndefined(jiraData.fields.issuetype.name)){this.setType(jiraData.fields.issuetype.name);}; 
+            if(!isNullOrUndefined(jiraData.fields.status.name)){this.setStatus(jiraData.fields.status.name);};
             this.setPriroriry(jiraData.fields.priority.id);
-            this.setReporter(jiraData.fields.reporter.name);
+            if(!isNullOrUndefined(jiraData.fields.reporter.name)){this.setReporter(jiraData.fields.reporter.name);};
             this.settimeTrakingLogged(jiraData.fields.timetracking.timeSpentSeconds);
-            this.setAssigne(jiraData.fields.assignee.name);
+            if (!isNullOrUndefined(jiraData.fields.assignee)){
+                this.setAssigne(jiraData.fields.assignee.name);
+            }
+            //else{
+              //  this.setAssigne('laparlov');
+           // }
             this.setReopenCounter(jiraData.fields.customfield_10304);
             this.labels = jiraData.fields.labels;
             this.setProject(jiraData.fields.project.key);
