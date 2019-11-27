@@ -57,8 +57,6 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 
 	let distribucionModulo = new Array();
 
-	await checktask.saveStatus(processID.id,TASKNAME,PROCESSSTATUS.enProgreso,'Obteniendo datos');
-
 	//obtengo listado de nocs desde el servidor de noc
 	let queryNocsIdEnBandeja:{}[] = ((await nocservices.getNocByFilter().catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined})).operation.details);
 	//obtengo listado de JIRAS creados el dia anterior al actual
@@ -72,28 +70,24 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 
 	if(isNullOrUndefined(queryNocsIdEnBandeja)){
 		let mailTxt = 'error de servicio externo al obtener Tickets en bandeja';
-		await checktask.saveStatus(processID.id,TASKNAME,PROCESSSTATUS.error,mailTxt);
 		await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
 		logger.taskEndInfo(TASKNAME);
 		return;
 	}
 	if(isNullOrUndefined(queryJIRACreados)){
 		let mailTxt = 'error de servicio externo al obtener Tickets creados';
-		await checktask.saveStatus(processID.id,TASKNAME,PROCESSSTATUS.error,mailTxt);
 		await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
 		logger.taskEndInfo(TASKNAME);
 		return;
 	}
 	if(isNullOrUndefined(queryJIRAResueltos)){
 		let mailTxt = 'error de servicio externo al obtener Tickets resueltos';
-		await checktask.saveStatus(processID.id,TASKNAME,PROCESSSTATUS.error,mailTxt);
 		await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
 		logger.taskEndInfo(TASKNAME);
 		return;
 	}
 	if(isNullOrUndefined(queryJIRAReOpen)){
 		let mailTxt = 'error de servicio externo al obtener Tickets reabiertos';
-		await checktask.saveStatus(processID.id,TASKNAME,PROCESSSTATUS.error,mailTxt);
 		await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
 		logger.taskEndInfo(TASKNAME);
 		return;
@@ -107,7 +101,6 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 	}
 
 
-	await checktask.saveStatus(processID.id,TASKNAME,PROCESSSTATUS.enProgreso,'Procesando datos');
 	//genero un array de objetos noc
 	for(let i = 0; i < queryNocsIdEnBandeja.length; i++){
 		let auxNocInsatnce:Noc;
@@ -168,7 +161,6 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 		}
 
 		if(save){
-			await checktask.saveStatus(processID.id,TASKNAME,PROCESSSTATUS.enProgreso,'Guardando Datos en BBDD');
 			let totalPorModulo = countDistribucionModuloPrd+countDistribucionModuloHml+countDistribucionModuloCapa;
 			//INSERTAR LOS DATOS EN LA BBDD	
 			v_saveBacklogBBDDQueryDistrinucion = 'INSERT INTO "BACKLOG_DISTRIBUCION"("FECHA","MODULO","CANT_PRD","CANT_HML", "CANT_CAPA","TOTAL")	VALUES (';
@@ -218,13 +210,11 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 		let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
 		let backlogExistOnBBDD = (await BBDDcheckDataBase.query('select count(*) FROM "BACKLOG" WHERE "FECHA" = '+"'"+date+"'"+';'))[0].count;
 		if(backlogExistOnBBDD == 0){
-			await checktask.saveStatus(processID.id,TASKNAME,PROCESSSTATUS.enProgreso,'Guardando Datos en BBDD');
 			let BBDDinsertBacklog = new bbddpostgres.BBDDconect();
 			await BBDDinsertBacklog.query(v_saveBacklogBBDDQuery);
 		}
 	}
 	//Obtengo la informacion de los campos con historial para los ultimos 6 dias
-	await checktask.saveStatus(processID.id,TASKNAME,PROCESSSTATUS.enProgreso,'Obteniendo Datos Historicos');
 	let BBDDBacklogLastDays = new bbddpostgres.BBDDconect()
 	let backlogLastDays:any[] = <[]>await BBDDBacklogLastDays.query('SELECT "FECHA", "CREADAS", "RESUELTAS", "PRIORIZADO_PORCENTUAL_BAJA","PRIORIZADO_PORCENTUAL_ALTA","PRIORIZADO_PORCENTUAL_URGENTE","REABIERTOS"FROM "BACKLOG" ORDER BY "FECHA" desc LIMIT 6;');
 
@@ -243,7 +233,6 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 		datosUltimos6DiasArray.push(datosUltimos6Dias);
 	}
 
-	await checktask.saveStatus(processID.id,TASKNAME,PROCESSSTATUS.enProgreso,'Armando Response');
 
 	//armo el JSON
 	for(let i = 0; i < backlogLastDays.length ; i++){

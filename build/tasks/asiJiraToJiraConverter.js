@@ -39,7 +39,7 @@ function createJirafromAsiJira(req, res) {
         let jiraExistenteFlag;
         let asiJiraListNotEmptyFlag = false;
         let statusCloseCondition = ['Listo', 'CANCELADO', 'CERRADO', 'RECHAZADO', 'VERIFICADO', 'Implementado', 'Testing Desaprobado', 'Instalacion Cancelada QA', 'Assesment Desaprobado', 'Instalacion Cancelada HML', 'Aceptacion Usuario HML Desaprobado', 'Aceptacion Usuario PROD Desaprobado', 'Implementado en PRODUCCION', 'Inst Cancelada PROD', 'Testing Cancelado', 'Autorización Rechazada', 'IMPLEMENTADO EN PROD CON EXCEPCIÓN', 'Implementacion en Prueba', 'AUTORIZACION QA CANCELADA', 'Rechazado por Controles', 'Resolucíon'];
-        let filtroAsiJira = 'project = APPSADE AND issuetype in (".ASI Incidente", ".ASI Incidente Crítico", ".ASI Mejora SW", ".ASI Registración de Tareas ", ".ASI Req Correctivo SW", ".ASI Req Evolutivo SW", ".ASI Bug SW") AND (created >= -3d OR updated >= -3d)&maxResults=300';
+        let filtroAsiJira = 'project = APPSADE AND issuetype in (".ASI Incidente", ".ASI Incidente Crítico", ".ASI Mejora SW", ".ASI Registración de Tareas ", ".ASI Req Correctivo SW", ".ASI Req Evolutivo SW", ".ASI Bug SW") AND (created >= -1d OR updated >= -1d)&maxResults=300';
         //BUSCO LOS ASIJIRA A IMPORTAR A PARTIR DEL FILTRO
         let asiJiraList = yield asijiraservices.getJiraByJql(filtroAsiJira).catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; });
         //ARMO UN ARRAY CON LOS ID DE LOS ASIJIRA ENCONTRADOS

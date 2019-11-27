@@ -55,7 +55,6 @@ function backlogDiario(req, res) {
         let countDistribucionModuloHml = 0;
         let countDistribucionModuloCapa = 0;
         let distribucionModulo = new Array();
-        yield checktask.saveStatus(processID.id, TASKNAME, PROCESSSTATUS.enProgreso, 'Obteniendo datos');
         //obtengo listado de nocs desde el servidor de noc
         let queryNocsIdEnBandeja = ((yield nocservices.getNocByFilter().catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; })).operation.details);
         //obtengo listado de JIRAS creados el dia anterior al actual
@@ -68,28 +67,24 @@ function backlogDiario(req, res) {
         let quwryJIRARepetitivos = (yield jiraservices.getJiraByJql('project = BISADE AND issuetype = COM_Bug AND labels = REGULATORIO AND status in (Open, "In Progress")').catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; })).total;
         if (util_1.isNullOrUndefined(queryNocsIdEnBandeja)) {
             let mailTxt = 'error de servicio externo al obtener Tickets en bandeja';
-            yield checktask.saveStatus(processID.id, TASKNAME, PROCESSSTATUS.error, mailTxt);
             yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
             logger.taskEndInfo(TASKNAME);
             return;
         }
         if (util_1.isNullOrUndefined(queryJIRACreados)) {
             let mailTxt = 'error de servicio externo al obtener Tickets creados';
-            yield checktask.saveStatus(processID.id, TASKNAME, PROCESSSTATUS.error, mailTxt);
             yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
             logger.taskEndInfo(TASKNAME);
             return;
         }
         if (util_1.isNullOrUndefined(queryJIRAResueltos)) {
             let mailTxt = 'error de servicio externo al obtener Tickets resueltos';
-            yield checktask.saveStatus(processID.id, TASKNAME, PROCESSSTATUS.error, mailTxt);
             yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
             logger.taskEndInfo(TASKNAME);
             return;
         }
         if (util_1.isNullOrUndefined(queryJIRAReOpen)) {
             let mailTxt = 'error de servicio externo al obtener Tickets reabiertos';
-            yield checktask.saveStatus(processID.id, TASKNAME, PROCESSSTATUS.error, mailTxt);
             yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
             logger.taskEndInfo(TASKNAME);
             return;
@@ -101,7 +96,6 @@ function backlogDiario(req, res) {
             logger.taskEndInfo(TASKNAME);
             return;
         }
-        yield checktask.saveStatus(processID.id, TASKNAME, PROCESSSTATUS.enProgreso, 'Procesando datos');
         //genero un array de objetos noc
         for (let i = 0; i < queryNocsIdEnBandeja.length; i++) {
             let auxNocInsatnce;
@@ -164,7 +158,6 @@ function backlogDiario(req, res) {
                 "capa": countDistribucionModuloCapa
             };
             if (save) {
-                yield checktask.saveStatus(processID.id, TASKNAME, PROCESSSTATUS.enProgreso, 'Guardando Datos en BBDD');
                 let totalPorModulo = countDistribucionModuloPrd + countDistribucionModuloHml + countDistribucionModuloCapa;
                 //INSERTAR LOS DATOS EN LA BBDD	
                 v_saveBacklogBBDDQueryDistrinucion = 'INSERT INTO "BACKLOG_DISTRIBUCION"("FECHA","MODULO","CANT_PRD","CANT_HML", "CANT_CAPA","TOTAL")	VALUES (';
@@ -206,13 +199,11 @@ function backlogDiario(req, res) {
             let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
             let backlogExistOnBBDD = (yield BBDDcheckDataBase.query('select count(*) FROM "BACKLOG" WHERE "FECHA" = ' + "'" + date + "'" + ';'))[0].count;
             if (backlogExistOnBBDD == 0) {
-                yield checktask.saveStatus(processID.id, TASKNAME, PROCESSSTATUS.enProgreso, 'Guardando Datos en BBDD');
                 let BBDDinsertBacklog = new bbddpostgres.BBDDconect();
                 yield BBDDinsertBacklog.query(v_saveBacklogBBDDQuery);
             }
         }
         //Obtengo la informacion de los campos con historial para los ultimos 6 dias
-        yield checktask.saveStatus(processID.id, TASKNAME, PROCESSSTATUS.enProgreso, 'Obteniendo Datos Historicos');
         let BBDDBacklogLastDays = new bbddpostgres.BBDDconect();
         let backlogLastDays = yield BBDDBacklogLastDays.query('SELECT "FECHA", "CREADAS", "RESUELTAS", "PRIORIZADO_PORCENTUAL_BAJA","PRIORIZADO_PORCENTUAL_ALTA","PRIORIZADO_PORCENTUAL_URGENTE","REABIERTOS"FROM "BACKLOG" ORDER BY "FECHA" desc LIMIT 6;');
         let datosUltimos6Dias;
@@ -228,7 +219,6 @@ function backlogDiario(req, res) {
             };
             datosUltimos6DiasArray.push(datosUltimos6Dias);
         }
-        yield checktask.saveStatus(processID.id, TASKNAME, PROCESSSTATUS.enProgreso, 'Armando Response');
         //armo el JSON
         for (let i = 0; i < backlogLastDays.length; i++) {
             datosUltimos6Dias = {

@@ -74,7 +74,6 @@ export async function saveStatus(processID:number,taskName:string,status:string,
         });
     }else{
         //SE MODIFICA REGISTRO EXISTENTE
-        BBDDcheckDataBase = new bbddpostgres.BBDDconect();
         BBDDcheckDataBase.query('UPDATE "TASK_PROCESS_AUD" SET "ESTADO" = \''+status+'\',"DETALLE"=\''+detail+'\', "RESPUESTA"=\''+response+'\',"FECHA_ACTUALIZACION" = now() WHERE "ID" = '+processID+';');
         return {id:processID,task:taskName};
     }
