@@ -25,15 +25,15 @@ export function build():Express{
 
 
     //URLs DEFINITIVAS
-    app.get('/v'+APIRESTVERSION.prod+'/informeBacklogDiario', informeBacklogDiario.backlogDiario); //genera backlog
-    app.post('/v'+APIRESTVERSION.prod+'/informeBacklogDiario', informeBacklogDiario.backlogDiario); //genera backlog y guarda en BBDD local
-    app.get('/v'+APIRESTVERSION.prod+'/informeBacklogDiario/date/:date', informeBacklogDiario.searchBacklogByDate); //recibe una fecha para traer el backlog de ese dia en formato YYYYMMDD
-    app.get('/v'+APIRESTVERSION.prod+'/priorizadosupdate', priorizadosupdate.run); //actualiza el listado de priorizados en BBDD local
-    app.get('/v'+APIRESTVERSION.prod+'/informemensual/priorizados/:date', informeMensualPriorizados.getPriorizadosByDate); //devuelve el total de priorizados del mes
-    app.get('/v'+APIRESTVERSION.prod+'/informemensual/backlog/:date', informeMensualPriorizados.getEverisNocByDate); //devuelve el total de backlog del mes
-    app.get('/v'+APIRESTVERSION.prod+'/asijiratojiraconverter', asiJiraToJiraConverter.createJirafromAsiJira); //importa los jiraAsi a Jira
-    app.post('/v'+APIRESTVERSION.prod+'/asijiratojiraconverter/:asijira', asiJiraToJiraConverter.createJirafromAsiJira); //importa los jiraAsi a Jira
-    app.get('/v'+APIRESTVERSION.prod+'/checktask/:id', checkTask.checkTaskProcessStatusById); //devuelve estado de ejecucion de tarea
+    app.get('/v'+APIRESTVERSION.prod+'/informeBacklogDiario', informeBacklogDiario.backlogDiario); // [RUN] genera backlog
+    app.post('/v'+APIRESTVERSION.prod+'/informeBacklogDiario', informeBacklogDiario.backlogDiario); // [RUN] genera backlog y guarda en BBDD local
+    app.get('/v'+APIRESTVERSION.prod+'/informeBacklogDiario/date/:date', informeBacklogDiario.searchBacklogByDate); // [RUN] recibe una fecha para traer el backlog de ese dia en formato YYYYMMDD
+    app.get('/v'+APIRESTVERSION.prod+'/priorizadosupdate', priorizadosupdate.run); // [RUN] actualiza el listado de priorizados en BBDD local
+    app.get('/v'+APIRESTVERSION.prod+'/informemensual/priorizados/:date', informeMensualPriorizados.getPriorizadosByDate); // [RUN] devuelve el total de priorizados del mes
+    app.get('/v'+APIRESTVERSION.prod+'/informemensual/backlog/:date', informeMensualPriorizados.getEverisNocByDate); // [RUN] devuelve el total de backlog del mes
+    app.get('/v'+APIRESTVERSION.prod+'/asijiratojiraconverter', asiJiraToJiraConverter.createJirafromAsiJira); // [DESA] importa los jiraAsi a Jira segun filtro predeterminado
+    app.post('/v'+APIRESTVERSION.prod+'/asijiratojiraconverter/:asijira', asiJiraToJiraConverter.createJirafromAsiJira); // [DESA] importa los jiraAsi a Jira segun parametro enviado por el usuario
+    app.get('/v'+APIRESTVERSION.prod+'/checktask/:id', checkTask.checkTaskProcessStatusById); // [ERHA] devuelve estado de ejecucion de tarea
 
     //REGULATORIOS
 //    app.get("'/v'+APIRESTVERSION.prod+'/appSade9570", appSade9570.run); //genera nueva transaccion a partir de la anterior, imprime update para actualizar registro de psoc con nueva transaccion.
