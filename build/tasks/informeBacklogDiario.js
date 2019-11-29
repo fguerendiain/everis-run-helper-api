@@ -38,7 +38,7 @@ function backlogDiario(req, res) {
             if (backlogExistOnBBDD != 0) {
                 let mailTxt = 'el backlog ya existe para la fecha indicada';
                 yield emailtools.sendByMail(RESPONSABLE, TASKNAME, mailTxt);
-                yield res.status(200).send('{"message":"' + mailTxt + '"}');
+                yield checktask.saveStatus(processID.id, TASKNAME, PROCESSSTATUS.finalizado, 'Proceso Finalizado', JSON.stringify({ resultado: mailTxt }));
                 logger.taskEndInfo(TASKNAME);
                 return;
             }

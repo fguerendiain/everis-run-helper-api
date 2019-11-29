@@ -20,6 +20,14 @@ const TASKLOGFILE = 'asiJiraToJiraConverter'
 
 let response:express.Response;
 
+/*
+MEJORAS:
+--Consultar si los siguientes datos son necesarios y si lo correcto es crear los campos en sus
+respectivos lugares issueType y Version o si se guardan como labels
+-Armar Match y validacion de cambio issueType
+-Armar Match y validacion de cambio campo Version
+*/
+
 export async function createJirafromAsiJira(req: express.Request, res: express.Response){
 
     logger.taskBeginInfo(TASKNAME,TASKLOGFILE);
@@ -28,7 +36,20 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
     let processID = await checktask.saveStatus(0,TASKNAME,PROCESSSTATUS.enProgreso,'Inicia proceso');
 
     response.status(200).send(processID);
-    
+
+    let postAsiJiraRequest:boolean = false;
+
+    if(req.method == 'POST'){
+        if(isNullOrUndefined(req.params.asijira)){
+            let mailTxt:string = 'El id "'+req.params.asijira+'" no es valido';
+			await emailtools.sendByMail(RESPONSABLE,TASKNAME,mailTxt);
+            await checktask.saveStatus(processID.id,TASKNAME,PROCESSSTATUS.finalizado,'Proceso finalizado',JSON.stringify({resultado:mailTxt}));
+			logger.taskEndInfo(TASKNAME);
+            return;
+        }
+        postAsiJiraRequest = true;
+    }
+
 
     const result:JSON[] = [];
     let resultCommentPrintflag:boolean = false;
@@ -39,13 +60,20 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
     let asiJiraListNotEmptyFlag:boolean = false;
 
     let statusCloseCondition:string[] = ['Listo','CANCELADO','CERRADO','RECHAZADO','VERIFICADO','Implementado','Testing Desaprobado','Instalacion Cancelada QA','Assesment Desaprobado','Instalacion Cancelada HML','Aceptacion Usuario HML Desaprobado','Aceptacion Usuario PROD Desaprobado','Implementado en PRODUCCION','Inst Cancelada PROD','Testing Cancelado','Autorización Rechazada','IMPLEMENTADO EN PROD CON EXCEPCIÓN','Implementacion en Prueba','AUTORIZACION QA CANCELADA','Rechazado por Controles','Resolucíon']
-    let filtroAsiJira:string = 'project = APPSADE AND issuetype in (".ASI Incidente", ".ASI Incidente Crítico", ".ASI Mejora SW", ".ASI Registración de Tareas ", ".ASI Req Correctivo SW", ".ASI Req Evolutivo SW", ".ASI Bug SW") AND (created >= -1d OR updated >= -1d)&maxResults=300';
+    let filtroAsiJira:string;
+
+    if(postAsiJiraRequest){
+        filtroAsiJira = 'id = "'+req.params.asijira+'"';
+    }else{
+        filtroAsiJira = 'project = APPSADE AND issuetype in (".ASI Incidente", ".ASI Incidente Crítico", ".ASI Mejora SW", ".ASI Registración de Tareas ", ".ASI Req Correctivo SW", ".ASI Req Evolutivo SW", ".ASI Bug SW") AND (created >= -1d OR updated >= -1d)&maxResults=300';
+    }
+
 
     //BUSCO LOS ASIJIRA A IMPORTAR A PARTIR DEL FILTRO
     let asiJiraList = await asijiraservices.getJiraByJql(filtroAsiJira).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined});
 
-    //ARMO UN ARRAY CON LOS ID DE LOS ASIJIRA ENCONTRADOS
     let idJira:string[] = [];
+    //ARMO UN ARRAY CON LOS ID DE LOS ASIJIRA ENCONTRADOS
     if(!isNullOrUndefined(asiJiraList) && asiJiraList.total != 0){
         for(let i = 0; i < asiJiraList.total; i++){
             if(!isNullOrUndefined(asiJiraList.issues[i])){
@@ -151,15 +179,24 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
                     jira.setSubject(asijira.getSubject());
                     jira.setDescription(asijira.getDescription());        
                     jira.setType(asijira.getType());
-                    jira.setAssigne(JIRACREDENTIALS.jira.user);
                     jira.setPriroriry(asijira.getPriroriry());
                     jira.setLabels(asijira.getProject());
     
                     let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
                     let componentMapper = (await BBDDcheckDataBase.query('SELECT "ID_COMP_JIRA" FROM "JIRA_COMPONENTS_MAPER" WHERE "ID_COMP_ASIJIRA" = '+asijira.getComponents()[0]+' AND "PROJECT" = \''+asijira.getProject()+'\';'));
                     
+                    //DEPENDIENDO EL COMPONENTE "MODULO" SE ASIGNA EL LIDER DEL EQUIPO
                     if(!isNullOrUndefined(componentMapper[0])){
                         jira.setComponents(componentMapper[0].ID_COMP_JIRA);
+                        let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
+                        let assigneeByComponent = (await BBDDcheckDataBase.query('SELECT "ASSIGNEE" FROM "JIRA_ASSIGNEE_MAPER" WHERE "FK_ID_COMP_JIRA" = \''+componentMapper[0].ID_COMP_JIRA+'\' AND "PROJECT" = \''+asijira.getProject()+'\';'));
+                        if(!isNullOrUndefined(assigneeByComponent[0])){
+                            jira.setAssigne(assigneeByComponent[0].ASSIGNEE);
+                        }else{
+                            jira.setAssigne(JIRACREDENTIALS.jira.user);
+                        }                        
+                    }else{
+                        jira.setAssigne(JIRACREDENTIALS.jira.user);
                     }
     
                     //CREO EL JIRA

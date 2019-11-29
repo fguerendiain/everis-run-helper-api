@@ -36,7 +36,7 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 		if(backlogExistOnBBDD != 0){
 			let mailTxt = 'el backlog ya existe para la fecha indicada';
 			await emailtools.sendByMail(RESPONSABLE,TASKNAME,mailTxt);
-			await res.status(200).send('{"message":"'+mailTxt+'"}');
+			await checktask.saveStatus(processID.id,TASKNAME,PROCESSSTATUS.finalizado,'Proceso Finalizado',JSON.stringify({resultado:mailTxt}));
 			logger.taskEndInfo(TASKNAME);
 			return;
 			}
