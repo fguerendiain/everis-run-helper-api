@@ -10,6 +10,7 @@ import { Jira } from '../entities/Jira';
 import * as jiraservices from '../externalServices/RESTService/JIRAService';
 import * as asijiraservices from '../externalServices/RESTService/ASIJIRAService';
 import * as checktask from './checkTask';
+import { stringify } from 'querystring';
 
 const JIRACREDENTIALS = config.get("credentials");
 const PROCESSSTATUS = config.get("asiJiraToJiraConverter").estadoProceso;
@@ -22,10 +23,18 @@ let response:express.Response;
 
 /*
 MEJORAS:
---Consultar si los siguientes datos son necesarios y si lo correcto es crear los campos en sus
-respectivos lugares issueType y Version o si se guardan como labels
--Armar Match y validacion de cambio issueType
--Armar Match y validacion de cambio campo Version
+Armar tabla con relacion MODULO => CONTRATO
+
+cargar lable de contrato segun issuetype
+
+si es.
+10212,'.ASI Req Correctivo SW', APM
+
+cualquier otro issuetype:
+CORE, --DGPRTDG
+SATELITE, --DGEADM 
+ARQUITECTURA, -- APM-ARQ 
+WORKFLOW --DGABDIP
 */
 
 export async function createJirafromAsiJira(req: express.Request, res: express.Response){
@@ -166,8 +175,7 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
                     jira.setComponents(componentMapper[0].ID_COMP_JIRA);
                     jiraservices.modifyJira(jira).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined});
                 }                            
- 
- 
+
                 logger.info(TASKLABLE,"Fin: Se actualiza Jira: "+jira.getId()+" a partir de AsiJira: "+asijira.getId(),TASKLOGFILE);
 
                 //SI NO EXISTE EN JIRA LO CREO CON LOS COMENTARIOS QUE TENGA
@@ -178,7 +186,6 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
                     jira = new Jira();
                     jira.setSubject(asijira.getSubject());
                     jira.setDescription(asijira.getDescription());        
-                    jira.setType(asijira.getType());
                     jira.setPriroriry(asijira.getPriroriry());
                     jira.setLabels(asijira.getProject());
     
@@ -198,7 +205,20 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
                     }else{
                         jira.setAssigne(JIRACREDENTIALS.jira.user);
                     }
-    
+
+                    //DEPENDIENDO EL ISSUETYPE DEFINO SI EL CONTRATO
+                    if(!isNullOrUndefined(asijira.getType())){
+                        if(asijira.getType() == '.ASI Req Correctivo SW'){
+                            jira.setLabels('APM');
+                        }else{
+                            if(!isNullOrUndefined(jira.getComponents()[0])){
+                                let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
+                                let contractType = (await BBDDcheckDataBase.query('SELECT "T_CONTRATO" FROM "JIRA_TYPE_CONTRACT_MAPER" WHERE "FK_ID_COMP_JIRA" = '+jira.getComponents()+';'))[0].T_CONTRATO;
+                                jira.setLabels(contractType);
+                            }
+                        }
+                    }
+
                     //CREO EL JIRA
                     createdJira = await jiraservices.createJira(jira).catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined});
                     if(!isNullOrUndefined(createdJira)){
