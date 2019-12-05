@@ -25,12 +25,38 @@ const RESPONSABLE = 'franco.javier.guerendiain@everis.com';
 const TASKLABLE = 'ASI JIRA CONVERTER';
 const TASKLOGFILE = 'asiJiraToJiraConverter';
 let response;
+/*
+MEJORAS:
+Armar tabla con relacion MODULO => CONTRATO
+
+cargar lable de contrato segun issuetype
+
+si es.
+10212,'.ASI Req Correctivo SW', APM
+
+cualquier otro issuetype:
+CORE, --DGPRTDG
+SATELITE, --DGEADM
+ARQUITECTURA, -- APM-ARQ
+WORKFLOW --DGABDIP
+*/
 function createJirafromAsiJira(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         logger.taskBeginInfo(TASKNAME, TASKLOGFILE);
         response = res;
         let processID = yield checktask.saveStatus(0, TASKNAME, PROCESSSTATUS.enProgreso, 'Inicia proceso');
         response.status(200).send(processID);
+        let postAsiJiraRequest = false;
+        if (req.method == 'POST') {
+            if (util_1.isNullOrUndefined(req.params.asijira)) {
+                let mailTxt = 'El id "' + req.params.asijira + '" no es valido';
+                yield emailtools.sendByMail(RESPONSABLE, TASKNAME, mailTxt);
+                yield checktask.saveStatus(processID.id, TASKNAME, PROCESSSTATUS.finalizado, 'Proceso finalizado', JSON.stringify({ resultado: mailTxt }));
+                logger.taskEndInfo(TASKNAME);
+                return;
+            }
+            postAsiJiraRequest = true;
+        }
         const result = [];
         let resultCommentPrintflag = false;
         let resultStatusPrintflag = false;
@@ -39,11 +65,17 @@ function createJirafromAsiJira(req, res) {
         let jiraExistenteFlag;
         let asiJiraListNotEmptyFlag = false;
         let statusCloseCondition = ['Listo', 'CANCELADO', 'CERRADO', 'RECHAZADO', 'VERIFICADO', 'Implementado', 'Testing Desaprobado', 'Instalacion Cancelada QA', 'Assesment Desaprobado', 'Instalacion Cancelada HML', 'Aceptacion Usuario HML Desaprobado', 'Aceptacion Usuario PROD Desaprobado', 'Implementado en PRODUCCION', 'Inst Cancelada PROD', 'Testing Cancelado', 'Autorización Rechazada', 'IMPLEMENTADO EN PROD CON EXCEPCIÓN', 'Implementacion en Prueba', 'AUTORIZACION QA CANCELADA', 'Rechazado por Controles', 'Resolucíon'];
-        let filtroAsiJira = 'project = APPSADE AND issuetype in (".ASI Incidente", ".ASI Incidente Crítico", ".ASI Mejora SW", ".ASI Registración de Tareas ", ".ASI Req Correctivo SW", ".ASI Req Evolutivo SW", ".ASI Bug SW") AND (created >= -1d OR updated >= -1d)&maxResults=300';
+        let filtroAsiJira;
+        if (postAsiJiraRequest) {
+            filtroAsiJira = 'id = "' + req.params.asijira + '"';
+        }
+        else {
+            filtroAsiJira = 'project = APPSADE AND issuetype in (".ASI Incidente", ".ASI Incidente Crítico", ".ASI Mejora SW", ".ASI Registración de Tareas ", ".ASI Req Correctivo SW", ".ASI Req Evolutivo SW", ".ASI Bug SW") AND (created >= -1d OR updated >= -1d)&maxResults=300';
+        }
         //BUSCO LOS ASIJIRA A IMPORTAR A PARTIR DEL FILTRO
         let asiJiraList = yield asijiraservices.getJiraByJql(filtroAsiJira).catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; });
-        //ARMO UN ARRAY CON LOS ID DE LOS ASIJIRA ENCONTRADOS
         let idJira = [];
+        //ARMO UN ARRAY CON LOS ID DE LOS ASIJIRA ENCONTRADOS
         if (!util_1.isNullOrUndefined(asiJiraList) && asiJiraList.total != 0) {
             for (let i = 0; i < asiJiraList.total; i++) {
                 if (!util_1.isNullOrUndefined(asiJiraList.issues[i])) {
@@ -136,14 +168,37 @@ function createJirafromAsiJira(req, res) {
                         jira = new Jira_1.Jira();
                         jira.setSubject(asijira.getSubject());
                         jira.setDescription(asijira.getDescription());
-                        jira.setType(asijira.getType());
-                        jira.setAssigne(JIRACREDENTIALS.jira.user);
                         jira.setPriroriry(asijira.getPriroriry());
                         jira.setLabels(asijira.getProject());
                         let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
                         let componentMapper = (yield BBDDcheckDataBase.query('SELECT "ID_COMP_JIRA" FROM "JIRA_COMPONENTS_MAPER" WHERE "ID_COMP_ASIJIRA" = ' + asijira.getComponents()[0] + ' AND "PROJECT" = \'' + asijira.getProject() + '\';'));
+                        //DEPENDIENDO EL COMPONENTE "MODULO" SE ASIGNA EL LIDER DEL EQUIPO
                         if (!util_1.isNullOrUndefined(componentMapper[0])) {
                             jira.setComponents(componentMapper[0].ID_COMP_JIRA);
+                            let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
+                            let assigneeByComponent = (yield BBDDcheckDataBase.query('SELECT "ASSIGNEE" FROM "JIRA_ASSIGNEE_MAPER" WHERE "FK_ID_COMP_JIRA" = \'' + componentMapper[0].ID_COMP_JIRA + '\' AND "PROJECT" = \'' + asijira.getProject() + '\';'));
+                            if (!util_1.isNullOrUndefined(assigneeByComponent[0])) {
+                                jira.setAssigne(assigneeByComponent[0].ASSIGNEE);
+                            }
+                            else {
+                                jira.setAssigne(JIRACREDENTIALS.jira.user);
+                            }
+                        }
+                        else {
+                            jira.setAssigne(JIRACREDENTIALS.jira.user);
+                        }
+                        //DEPENDIENDO EL ISSUETYPE DEFINO SI EL CONTRATO
+                        if (!util_1.isNullOrUndefined(asijira.getType())) {
+                            if (asijira.getType() == '.ASI Req Correctivo SW') {
+                                jira.setLabels('APM');
+                            }
+                            else {
+                                if (!util_1.isNullOrUndefined(jira.getComponents()[0])) {
+                                    let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
+                                    let contractType = (yield BBDDcheckDataBase.query('SELECT "T_CONTRATO" FROM "JIRA_TYPE_CONTRACT_MAPER" WHERE "FK_ID_COMP_JIRA" = ' + jira.getComponents() + ';'))[0].T_CONTRATO;
+                                    jira.setLabels(contractType);
+                                }
+                            }
                         }
                         //CREO EL JIRA
                         createdJira = yield jiraservices.createJira(jira).catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; });

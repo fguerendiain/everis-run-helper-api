@@ -10,6 +10,10 @@ import * as informeMensualPriorizados from './tasks/informeMensualPriorizados';
 import * as convertirBase64 from './tasks/convertirBase64';
 import * as asiJiraToJiraConverter from './tasks/asiJiraToJiraConverter';
 import * as checkTask from './tasks/checkTask';
+import * as config from './config';
+
+
+const APIRESTVERSION = config.get("apiRestVersion");
 
 export function build():Express{
  
@@ -18,23 +22,26 @@ export function build():Express{
     app.use(bodyParser.json());
     app.use(cors());
 
+
+
     //URLs DEFINITIVAS
-    app.get("/informeBacklogDiario", informeBacklogDiario.backlogDiario); //genera backlog
-    app.post("/informeBacklogDiario", informeBacklogDiario.backlogDiario); //genera backlog y guarda en BBDD local
-    app.get("/informeBacklogDiario/date/:date", informeBacklogDiario.searchBacklogByDate); //recibe una fecha para traer el backlog de ese dia en formato YYYYMMDD
-    app.get("/priorizadosupdate", priorizadosupdate.run); //actualiza el listado de priorizados en BBDD local
-    app.get("/informemensual/priorizados/:date", informeMensualPriorizados.getPriorizadosByDate); //devuelve el total de priorizados del mes
-    app.get("/informemensual/backlog/:date", informeMensualPriorizados.getEverisNocByDate); //devuelve el total de backlog del mes
-    app.get("/asijiratojiraconverter", asiJiraToJiraConverter.createJirafromAsiJira); //importa los jiraAsi a Jira
-    app.get("/checktask/:id", checkTask.checkTaskProcessStatusById); //devuelve estado de ejecucion de tarea
+    app.get('/v'+APIRESTVERSION.prod+'/informeBacklogDiario', informeBacklogDiario.backlogDiario); // [RUN] genera backlog
+    app.post('/v'+APIRESTVERSION.prod+'/informeBacklogDiario', informeBacklogDiario.backlogDiario); // [RUN] genera backlog y guarda en BBDD local
+    app.get('/v'+APIRESTVERSION.prod+'/informeBacklogDiario/date/:date', informeBacklogDiario.searchBacklogByDate); // [RUN] recibe una fecha para traer el backlog de ese dia en formato YYYYMMDD
+    app.get('/v'+APIRESTVERSION.prod+'/priorizadosupdate', priorizadosupdate.run); // [RUN] actualiza el listado de priorizados en BBDD local
+    app.get('/v'+APIRESTVERSION.prod+'/informemensual/priorizados/:date', informeMensualPriorizados.getPriorizadosByDate); // [RUN] devuelve el total de priorizados del mes
+    app.get('/v'+APIRESTVERSION.prod+'/informemensual/backlog/:date', informeMensualPriorizados.getEverisNocByDate); // [RUN] devuelve el total de backlog del mes
+    app.get('/v'+APIRESTVERSION.prod+'/asijiratojiraconverter', asiJiraToJiraConverter.createJirafromAsiJira); // [DESA] importa los jiraAsi a Jira segun filtro predeterminado
+    app.post('/v'+APIRESTVERSION.prod+'/asijiratojiraconverter/:asijira', asiJiraToJiraConverter.createJirafromAsiJira); // [DESA] importa los jiraAsi a Jira segun parametro enviado por el usuario
+    app.get('/v'+APIRESTVERSION.prod+'/checktask/:id', checkTask.checkTaskProcessStatusById); // [ERHA] devuelve estado de ejecucion de tarea
 
     //REGULATORIOS
-//    app.get("/appSade9570", appSade9570.run); //genera nueva transaccion a partir de la anterior, imprime update para actualizar registro de psoc con nueva transaccion.
+//    app.get("'/v'+APIRESTVERSION.prod+'/appSade9570", appSade9570.run); //genera nueva transaccion a partir de la anterior, imprime update para actualizar registro de psoc con nueva transaccion.
 
     //DEVELOP
-    app.get("/vincularDocumento", vincularDocumento.run);
-    app.get("/noctojiraconverter", nocToJiraConverter.run);
-    app.get("/convertirBase64/encode/:filedir", convertirBase64.base64Encoder); //devuelve el documento pasado por parametro como un string en Base64
+    app.get("'/v'+APIRESTVERSION.prod+'/vincularDocumento", vincularDocumento.run);
+    app.get("'/v'+APIRESTVERSION.prod+'/noctojiraconverter", nocToJiraConverter.run);
+    app.get("'/v'+APIRESTVERSION.prod+'/convertirBase64/encode/:filedir", convertirBase64.base64Encoder); //devuelve el documento pasado por parametro como un string en Base64
 
 
 
