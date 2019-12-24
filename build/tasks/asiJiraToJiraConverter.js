@@ -25,21 +25,6 @@ const RESPONSABLE = 'franco.javier.guerendiain@everis.com';
 const TASKLABLE = 'ASI JIRA CONVERTER';
 const TASKLOGFILE = 'asiJiraToJiraConverter';
 let response;
-/*
-MEJORAS:
-Armar tabla con relacion MODULO => CONTRATO
-
-cargar lable de contrato segun issuetype
-
-si es.
-10212,'.ASI Req Correctivo SW', APM
-
-cualquier otro issuetype:
-CORE, --DGPRTDG
-SATELITE, --DGEADM
-ARQUITECTURA, -- APM-ARQ
-WORKFLOW --DGABDIP
-*/
 function createJirafromAsiJira(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         logger.taskBeginInfo(TASKNAME, TASKLOGFILE);
@@ -70,7 +55,7 @@ function createJirafromAsiJira(req, res) {
             filtroAsiJira = 'id = "' + req.params.asijira + '"';
         }
         else {
-            filtroAsiJira = 'project = APPSADE AND issuetype in (".ASI Incidente", ".ASI Incidente Crítico", ".ASI Mejora SW", ".ASI Registración de Tareas ", ".ASI Req Correctivo SW", ".ASI Req Evolutivo SW", ".ASI Bug SW") AND (created >= -1d OR updated >= -1d)&maxResults=300';
+            filtroAsiJira = 'project IN (APSSADETSJ,APPSADE,APPWORKFL2,APPLOYSUX,APPSADELEG,APPTAD2)  AND issuetype in (".ASI Incidente", ".ASI Incidente Crítico", ".ASI Mejora SW", ".ASI Registración de Tareas ", ".ASI Req Correctivo SW", ".ASI Req Evolutivo SW", ".ASI Bug SW") AND (created >= -1d OR updated >= -1d)&maxResults=300';
         }
         //BUSCO LOS ASIJIRA A IMPORTAR A PARTIR DEL FILTRO
         let asiJiraList = yield asijiraservices.getJiraByJql(filtroAsiJira).catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; });
@@ -151,9 +136,15 @@ function createJirafromAsiJira(req, res) {
                     }
                     //VERIFICO SI EL COMPONENTE CONTINUA SIENDO EL MISMO
                     let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
-                    let componentMapper = (yield BBDDcheckDataBase.query('SELECT "ID_COMP_JIRA" FROM "JIRA_COMPONENTS_MAPER" WHERE "ID_COMP_ASIJIRA" = ' + asijira.getComponents()[0] + ' AND "PROJECT" = \'' + asijira.getProject() + '\';'));
+                    let componentMapper;
+                    if (!util_1.isNullOrUndefined(asijira.getComponents()) && asijira.getComponents().length > 0) {
+                        componentMapper = (yield BBDDcheckDataBase.query('SELECT "ID_COMP_JIRA" FROM "JIRA_COMPONENTS_MAPER" WHERE "ID_COMP_ASIJIRA" = ' + asijira.getComponents()[0] + ' AND "PROJECT" = \'' + asijira.getProject() + '\';'));
+                    }
+                    else {
+                        componentMapper = null;
+                    }
                     //SI EL COMPONENTE CAMBIO LO ACTUALIZO
-                    if (!util_1.isNullOrUndefined(componentMapper[0]) && jira.getComponents()[0] != componentMapper[0].ID_COMP_JIRA) {
+                    if (!util_1.isNullOrUndefined(componentMapper) && !util_1.isNullOrUndefined(componentMapper[0]) && jira.getComponents()[0] != componentMapper[0].ID_COMP_JIRA) {
                         resultComponentPrintflag = true;
                         jira.deleteComponent(jira.getComponents()[0]);
                         jira.setComponents(componentMapper[0].ID_COMP_JIRA);
@@ -171,9 +162,15 @@ function createJirafromAsiJira(req, res) {
                         jira.setPriroriry(asijira.getPriroriry());
                         jira.setLabels(asijira.getProject());
                         let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
-                        let componentMapper = (yield BBDDcheckDataBase.query('SELECT "ID_COMP_JIRA" FROM "JIRA_COMPONENTS_MAPER" WHERE "ID_COMP_ASIJIRA" = ' + asijira.getComponents()[0] + ' AND "PROJECT" = \'' + asijira.getProject() + '\';'));
+                        let componentMapper;
+                        if (!util_1.isNullOrUndefined(asijira.getComponents()) && asijira.getComponents().length > 0) {
+                            componentMapper = (yield BBDDcheckDataBase.query('SELECT "ID_COMP_JIRA" FROM "JIRA_COMPONENTS_MAPER" WHERE "ID_COMP_ASIJIRA" = ' + asijira.getComponents()[0] + ' AND "PROJECT" = \'' + asijira.getProject() + '\';'));
+                        }
+                        else {
+                            componentMapper = null;
+                        }
                         //DEPENDIENDO EL COMPONENTE "MODULO" SE ASIGNA EL LIDER DEL EQUIPO
-                        if (!util_1.isNullOrUndefined(componentMapper[0])) {
+                        if (!util_1.isNullOrUndefined(componentMapper) && !util_1.isNullOrUndefined(componentMapper[0])) {
                             jira.setComponents(componentMapper[0].ID_COMP_JIRA);
                             let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
                             let assigneeByComponent = (yield BBDDcheckDataBase.query('SELECT "ASSIGNEE" FROM "JIRA_ASSIGNEE_MAPER" WHERE "FK_ID_COMP_JIRA" = \'' + componentMapper[0].ID_COMP_JIRA + '\' AND "PROJECT" = \'' + asijira.getProject() + '\';'));
