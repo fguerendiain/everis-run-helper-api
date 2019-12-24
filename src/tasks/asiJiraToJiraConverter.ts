@@ -21,21 +21,6 @@ const TASKLOGFILE = 'asiJiraToJiraConverter'
 
 let response:express.Response;
 
-/*
-MEJORAS:
-Armar tabla con relacion MODULO => CONTRATO
-
-cargar lable de contrato segun issuetype
-
-si es.
-10212,'.ASI Req Correctivo SW', APM
-
-cualquier otro issuetype:
-CORE, --DGPRTDG
-SATELITE, --DGEADM 
-ARQUITECTURA, -- APM-ARQ 
-WORKFLOW --DGABDIP
-*/
 
 export async function createJirafromAsiJira(req: express.Request, res: express.Response){
 
@@ -74,7 +59,7 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
     if(postAsiJiraRequest){
         filtroAsiJira = 'id = "'+req.params.asijira+'"';
     }else{
-        filtroAsiJira = 'project = APPSADE AND issuetype in (".ASI Incidente", ".ASI Incidente Crítico", ".ASI Mejora SW", ".ASI Registración de Tareas ", ".ASI Req Correctivo SW", ".ASI Req Evolutivo SW", ".ASI Bug SW") AND (created >= -1d OR updated >= -1d)&maxResults=300';
+        filtroAsiJira = 'project IN (APSSADETSJ,APPSADE,APPWORKFL2,APPLOYSUX,APPSADELEG,APPTAD2)  AND issuetype in (".ASI Incidente", ".ASI Incidente Crítico", ".ASI Mejora SW", ".ASI Registración de Tareas ", ".ASI Req Correctivo SW", ".ASI Req Evolutivo SW", ".ASI Bug SW") AND (created >= -1d OR updated >= -1d)&maxResults=300';
     }
 
 
@@ -167,9 +152,15 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
 
                 //VERIFICO SI EL COMPONENTE CONTINUA SIENDO EL MISMO
                 let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
-                let componentMapper = (await BBDDcheckDataBase.query('SELECT "ID_COMP_JIRA" FROM "JIRA_COMPONENTS_MAPER" WHERE "ID_COMP_ASIJIRA" = '+asijira.getComponents()[0]+' AND "PROJECT" = \''+asijira.getProject()+'\';'));
+                let componentMapper;
+                if(!isNullOrUndefined(asijira.getComponents()) && asijira.getComponents().length > 0){
+                    componentMapper = (await BBDDcheckDataBase.query('SELECT "ID_COMP_JIRA" FROM "JIRA_COMPONENTS_MAPER" WHERE "ID_COMP_ASIJIRA" = '+asijira.getComponents()[0]+' AND "PROJECT" = \''+asijira.getProject()+'\';'));
+                }else{
+                    componentMapper = null;
+                }
+
                 //SI EL COMPONENTE CAMBIO LO ACTUALIZO
-                if(!isNullOrUndefined(componentMapper[0]) && jira.getComponents()[0] != componentMapper[0].ID_COMP_JIRA){
+                if(!isNullOrUndefined(componentMapper) && !isNullOrUndefined(componentMapper[0]) && jira.getComponents()[0] != componentMapper[0].ID_COMP_JIRA){
                     resultComponentPrintflag = true
                     jira.deleteComponent(jira.getComponents()[0]);
                     jira.setComponents(componentMapper[0].ID_COMP_JIRA);
@@ -190,10 +181,15 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
                     jira.setLabels(asijira.getProject());
     
                     let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
-                    let componentMapper = (await BBDDcheckDataBase.query('SELECT "ID_COMP_JIRA" FROM "JIRA_COMPONENTS_MAPER" WHERE "ID_COMP_ASIJIRA" = '+asijira.getComponents()[0]+' AND "PROJECT" = \''+asijira.getProject()+'\';'));
+                    let componentMapper;
+                    if(!isNullOrUndefined(asijira.getComponents()) && asijira.getComponents().length > 0){
+                        componentMapper = (await BBDDcheckDataBase.query('SELECT "ID_COMP_JIRA" FROM "JIRA_COMPONENTS_MAPER" WHERE "ID_COMP_ASIJIRA" = '+asijira.getComponents()[0]+' AND "PROJECT" = \''+asijira.getProject()+'\';'));
+                    }else{
+                        componentMapper = null;
+                    }
                     
                     //DEPENDIENDO EL COMPONENTE "MODULO" SE ASIGNA EL LIDER DEL EQUIPO
-                    if(!isNullOrUndefined(componentMapper[0])){
+                    if(!isNullOrUndefined(componentMapper) && !isNullOrUndefined(componentMapper[0])){
                         jira.setComponents(componentMapper[0].ID_COMP_JIRA);
                         let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
                         let assigneeByComponent = (await BBDDcheckDataBase.query('SELECT "ASSIGNEE" FROM "JIRA_ASSIGNEE_MAPER" WHERE "FK_ID_COMP_JIRA" = \''+componentMapper[0].ID_COMP_JIRA+'\' AND "PROJECT" = \''+asijira.getProject()+'\';'));
