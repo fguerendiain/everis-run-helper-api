@@ -205,7 +205,7 @@ function backlogDiario(req, res) {
         }
         //Obtengo la informacion de los campos con historial para los ultimos 6 dias
         let BBDDBacklogLastDays = new bbddpostgres.BBDDconect();
-        let backlogLastDays = yield BBDDBacklogLastDays.query('SELECT "FECHA", "CREADAS", "RESUELTAS", "PRIORIZADO_PORCENTUAL_BAJA","PRIORIZADO_PORCENTUAL_ALTA","PRIORIZADO_PORCENTUAL_URGENTE","REABIERTOS"FROM "BACKLOG" ORDER BY "FECHA" desc LIMIT 6;');
+        let backlogLastDays = yield BBDDBacklogLastDays.query('SELECT "FECHA", "CREADAS", "RESUELTAS", "PRIORIZADO_PORCENTUAL_BAJA","PRIORIZADO_PORCENTUAL_ALTA","PRIORIZADO_PORCENTUAL_URGENTE","REABIERTOS"FROM "BACKLOG" ORDER BY "FECHA" desc LIMIT 20;');
         let datosUltimos6Dias;
         if (!save) {
             datosUltimos6Dias = {
