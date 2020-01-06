@@ -150,20 +150,28 @@ export class Noc extends ticket{
     }
 
 
-    private formatCreateDate(createTime){
-        let formatedDate = new Date(+createTime);
+    private formatCreateDate(createTime: string){
+        if(!isNullOrUndefined(createTime)){
+            let formatedDate = new Date(+createTime);
 
-        let year:string = formatedDate.getFullYear().toString();
-        let month:string = formatedDate.getMonth().toString();
-        let day:string = formatedDate.getDay().toString();
-        
-        if(month.length == 1){
-            month = '0'+month;
-        } 
-        if(day.length == 1){
-            day = '0'+day;
-        } 
-        this.setCreated(year+month+day);
+            console.log(formatedDate.toDateString());
+            let year:string = formatedDate.getFullYear().toString();
+            let month:string = (formatedDate.getUTCMonth()+1).toString();
+            let day:string = formatedDate.getDate().toString();
+
+            console.log(year);
+            console.log(month);
+            console.log(day);
+            
+
+            if(month.length == 1){
+                month = '0'+month;
+            } 
+            if(day.length == 1){
+                day = '0'+day;
+            } 
+            this.setCreated(year+month+day);
+        }
     }
 
 }

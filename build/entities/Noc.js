@@ -134,17 +134,23 @@ class Noc extends Ticket_1.ticket {
         }
     }
     formatCreateDate(createTime) {
-        let formatedDate = new Date(+createTime);
-        let year = formatedDate.getFullYear().toString();
-        let month = formatedDate.getMonth().toString();
-        let day = formatedDate.getDay().toString();
-        if (month.length == 1) {
-            month = '0' + month;
+        if (!util_1.isNullOrUndefined(createTime)) {
+            let formatedDate = new Date(+createTime);
+            console.log(formatedDate.toDateString());
+            let year = formatedDate.getFullYear().toString();
+            let month = (formatedDate.getUTCMonth() + 1).toString();
+            let day = formatedDate.getDate().toString();
+            console.log(year);
+            console.log(month);
+            console.log(day);
+            if (month.length == 1) {
+                month = '0' + month;
+            }
+            if (day.length == 1) {
+                day = '0' + day;
+            }
+            this.setCreated(year + month + day);
         }
-        if (day.length == 1) {
-            day = '0' + day;
-        }
-        this.setCreated(year + month + day);
     }
 }
 exports.Noc = Noc;

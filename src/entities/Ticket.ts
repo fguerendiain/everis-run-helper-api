@@ -14,8 +14,8 @@ export abstract class ticket{
 	private id:string;
     private subject:string;
     private description:string;
-	private created:Date;
-	private updated:Date;
+	private created:string;
+	private updated:string;
 	private type:string;
 	private status:string;
 	private priroriry:string;
