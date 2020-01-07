@@ -45,7 +45,7 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 	let nocsArray = new Array;
 	let modulesArrayAll = new Array;
 	let modulesArray = new Array;
-	let datosUltimos6DiasArray = new Array;
+	let datosUltimosDiasArray = new Array;
 
 	//contadores
 	let countBacklogPriorizadoUrgente:number = 0;
@@ -182,7 +182,53 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 		countDistribucionModuloCapa = 0;
 	}
 
-	let priorizadosPorRegistro:any[] = await priorizadosupdate.getAllPriorizadosByDay(date);
+
+	//Obtengo la informacion de los campos con historial para los ultimos 6 dias
+	let BBDDBacklogLastDays = new bbddpostgres.BBDDconect()
+	let backlogLastDays:any[] = <[]>await BBDDBacklogLastDays.query('SELECT "FECHA", "CREADAS", "RESUELTAS", "PRIORIZADO_PORCENTUAL_BAJA","PRIORIZADO_PORCENTUAL_ALTA","PRIORIZADO_PORCENTUAL_URGENTE","REABIERTOS"FROM "BACKLOG" ORDER BY "FECHA" desc LIMIT 20;');
+
+	let datosDiaAnterior:{};
+
+	console.log("")
+	console.log("")
+	console.log("ARMO LOS DIAS")
+
+
+	if(!save){
+		datosDiaAnterior = {
+			"fecha": date,
+			"reaperturas": queryJIRAReOpen,
+			"creadas": queryJIRACreados,
+			"resueltas": queryJIRAResueltos,
+			"urgentePriorizadoPorcentaje": ((countBacklogPriorizadoUrgente/queryNocsIdEnBandeja.length).toFixed(2)),
+			"altaPriorizadoPorcentaje": ((countBacklogPriorizadoAlta/queryNocsIdEnBandeja.length).toFixed(2)),
+			"bajaPriorizadoPorcentaje": ((countBacklogPriorizadoBaja/queryNocsIdEnBandeja.length).toFixed(2))
+		};
+		datosUltimosDiasArray.push(datosDiaAnterior);
+	}
+
+	//armo el JSON
+	for(let i = 0; i < backlogLastDays.length ; i++){
+		datosDiaAnterior = {
+			"fecha": backlogLastDays[i].FECHA,
+			"reaperturas": parseInt(backlogLastDays[i].REABIERTOS),
+			"creadas": parseInt(backlogLastDays[i].CREADAS),
+			"resueltas": parseInt(backlogLastDays[i].RESUELTAS),
+			"urgentePriorizadoPorcentaje": backlogLastDays[i].PRIORIZADO_PORCENTUAL_URGENTE,
+			"altaPriorizadoPorcentaje": backlogLastDays[i].PRIORIZADO_PORCENTUAL_ALTA,
+			"bajaPriorizadoPorcentaje": backlogLastDays[i].PRIORIZADO_PORCENTUAL_BAJA
+		};
+		datosUltimosDiasArray.push(datosDiaAnterior);
+	}
+
+	for (let i = 0; i < datosUltimosDiasArray.length; i++) {
+		if (datosUltimosDiasArray[i].creadas === 0 && datosUltimosDiasArray[i].resueltas === 0) {
+			datosUltimosDiasArray.splice(i,1);
+			i--;
+		}
+	}
+
+	let priorizadosPorRegistro:any[] = await priorizadosupdate.getAllPriorizadosByDay(datosUltimosDiasArray[0].fecha);
 
 	if(save){
 
@@ -214,39 +260,6 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 			await BBDDinsertBacklog.query(v_saveBacklogBBDDQuery);
 		}
 	}
-	//Obtengo la informacion de los campos con historial para los ultimos 6 dias
-	let BBDDBacklogLastDays = new bbddpostgres.BBDDconect()
-	let backlogLastDays:any[] = <[]>await BBDDBacklogLastDays.query('SELECT "FECHA", "CREADAS", "RESUELTAS", "PRIORIZADO_PORCENTUAL_BAJA","PRIORIZADO_PORCENTUAL_ALTA","PRIORIZADO_PORCENTUAL_URGENTE","REABIERTOS"FROM "BACKLOG" ORDER BY "FECHA" desc LIMIT 20;');
-
-	let datosUltimos6Dias:{};
-
-	if(!save){
-		datosUltimos6Dias = {
-			"fecha": date,
-			"reaperturas": queryJIRAReOpen,
-			"creadas": queryJIRACreados,
-			"resueltas": queryJIRAResueltos,
-			"urgentePriorizadoPorcentaje": ((countBacklogPriorizadoUrgente/queryNocsIdEnBandeja.length).toFixed(2)),
-			"altaPriorizadoPorcentaje": ((countBacklogPriorizadoAlta/queryNocsIdEnBandeja.length).toFixed(2)),
-			"bajaPriorizadoPorcentaje": ((countBacklogPriorizadoBaja/queryNocsIdEnBandeja.length).toFixed(2))
-		};
-		datosUltimos6DiasArray.push(datosUltimos6Dias);
-	}
-
-
-	//armo el JSON
-	for(let i = 0; i < backlogLastDays.length ; i++){
-		datosUltimos6Dias = {
-			"fecha": backlogLastDays[i].FECHA,
-			"reaperturas": backlogLastDays[i].REABIERTOS,
-			"creadas": backlogLastDays[i].CREADAS,
-			"resueltas": backlogLastDays[i].RESUELTAS,
-			"urgentePriorizadoPorcentaje": backlogLastDays[i].PRIORIZADO_PORCENTUAL_URGENTE,
-			"altaPriorizadoPorcentaje": backlogLastDays[i].PRIORIZADO_PORCENTUAL_ALTA,
-			"bajaPriorizadoPorcentaje": backlogLastDays[i].PRIORIZADO_PORCENTUAL_BAJA
-		};
-		datosUltimos6DiasArray.push(datosUltimos6Dias);
-	}
 
 	let backlog:{} = {
 		"priorizacionDiaBaja": countBacklogPriorizadoBaja,
@@ -262,7 +275,7 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 	//armo el json de la respuesta final
 	let backlogJsonResponse = {
 		backlog,
-		datosUltimos6DiasArray,
+		datosUltimosDiasArray,
 		distribucionModulo,
 		priorizadosPorRegistro
 	} 
