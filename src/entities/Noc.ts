@@ -154,15 +154,9 @@ export class Noc extends ticket{
         if(!isNullOrUndefined(createTime)){
             let formatedDate = new Date(+createTime);
 
-            console.log(formatedDate.toDateString());
             let year:string = formatedDate.getFullYear().toString();
             let month:string = (formatedDate.getUTCMonth()+1).toString();
             let day:string = formatedDate.getDate().toString();
-
-            console.log(year);
-            console.log(month);
-            console.log(day);
-            
 
             if(month.length == 1){
                 month = '0'+month;
