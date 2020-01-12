@@ -103,6 +103,17 @@ const JIRACREDENTIALS = config.get("credentials").asijira;
         return resttools.apiRestConsume_v1(url,method,headers,getJiraByJql.name,null,param);
     }
 
+     
+    //BUSCAR ETIQUETAS DE PROYECTO
+    export function getJiraProjectTagList(v_query:string){
+        let url = JIRACREDENTIALS.host;
+        let method = "GET";
+        let headers:{} = {"Content-Type":"application/json",Accept:"application/json",Authorization:authConverter_v2(),Cookie:JIRACREDENTIALS.jsonidcookie};
+        let param = 'project/'+v_query+'/versions';
+        return resttools.apiRestConsume_v1(url,method,headers,getJiraByJql.name,null,param);
+    }
+
+
 
     //OBTENER TRANSICION DE JIRA
     export function getTransicionJira(v_query:string){

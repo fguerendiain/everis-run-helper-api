@@ -97,6 +97,15 @@ function getJiraByJql(v_query) {
     return resttools.apiRestConsume_v1(url, method, headers, getJiraByJql.name, null, param);
 }
 exports.getJiraByJql = getJiraByJql;
+//BUSCAR ETIQUETAS DE PROYECTO
+function getJiraProjectTagList(v_query) {
+    let url = JIRACREDENTIALS.host;
+    let method = "GET";
+    let headers = { "Content-Type": "application/json", Accept: "application/json", Authorization: authConverter_v2(), Cookie: JIRACREDENTIALS.jsonidcookie };
+    let param = 'project/' + v_query + '/versions';
+    return resttools.apiRestConsume_v1(url, method, headers, getJiraByJql.name, null, param);
+}
+exports.getJiraProjectTagList = getJiraProjectTagList;
 //OBTENER TRANSICION DE JIRA
 function getTransicionJira(v_query) {
     let url = JIRACREDENTIALS.host;

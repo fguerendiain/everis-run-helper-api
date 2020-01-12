@@ -1,16 +1,16 @@
 import * as express from 'express'
-import * as logger from '../../logger';
-import * as bbddpostgres from '../../entities/BBDDPostgres';
+import * as logger from '../logger';
+import * as bbddpostgres from '../entities/BBDDPostgres';
 import { isNullOrUndefined } from 'util';
 
-const TASKNAME = 'UTILS';
+const TASKNAME = 'ERHAUTILS';
 const TASKLABLE = 'UTIL';
 
 let response:express.Response;
 
 export async function getLeaderByProjectAndModule(req: express.Request, res: express.Response){
 
-    logger.taskBeginInfo(TASKNAME + "getLeaderByProjectAndModule");
+    logger.taskBeginInfo(TASKNAME + " getLeaderByProjectAndModule");
     response = res;    
 
     let projectParam = '';
@@ -67,36 +67,8 @@ export async function getLeaderByProjectAndModule(req: express.Request, res: exp
     await response.status(200).send(result);
 
     logger.info(TASKLABLE,JSON.stringify(result));
-    logger.taskEndInfo(TASKNAME);
+    logger.taskEndInfo(TASKNAME + getLeaderByProjectAndModule);
 }
 
 
 
-export async function getJiraProjectsList(req: express.Request, res: express.Response){
-
-    logger.taskBeginInfo(TASKNAME + "getJiraProjectsList");
-    response = res;    
-
-    let result = [];
-
-	let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
-    let listData = (await BBDDcheckDataBase.query(
-        `SELECT id, proyecto FROM Jira_proyectos;`
-        ));
-
-    if (!isNullOrUndefined(listData)) {
-        for (let i = 0; i < (<[]>listData).length; i++) {
-            result.push({
-                id: listData[i].id, 
-                project: listData[i].proyecto
-            });
-        }    
-    }
-
-    //SE ENVIA RESPUESTA AL CLIENTE
-    await response.status(200).send(result);
-
-    logger.info(TASKLABLE,JSON.stringify(result));
-    logger.taskEndInfo(TASKNAME);
-
-}

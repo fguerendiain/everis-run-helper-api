@@ -9,7 +9,8 @@ const informeMensualPriorizados = require("./tasks/informeMensualPriorizados");
 const asiJiraToJiraConverter = require("./tasks/asiJiraToJiraConverter");
 const checkTask = require("./tasks/checkTask");
 const config = require("./config");
-const utils = require("./tasks/util/utils");
+const jiraUtils = require("./utils/jiraUtils");
+const erhaUtils = require("./utils/erhaUtils");
 // import * as vincularDocumento from './tasks/vincularDocumento';
 // import * as nocToJiraConverter from './tasks/nocToJiraConverter';
 // import * as convertirBase64 from './tasks/convertirBase64';
@@ -31,8 +32,10 @@ function build() {
     //REGULATORIOS
     //    app.get("'/v'+APIRESTVERSION.prod+'/appSade9570", appSade9570.run); //genera nueva transaccion a partir de la anterior, imprime update para actualizar registro de psoc con nueva transaccion.
     //DEVELOP
-    app.get('/v' + APIRESTVERSION.prod + '/getLeaderByProjectAndModule/:project&:module', utils.getLeaderByProjectAndModule); // [ERHA] devuelve el lider para un proyecto y modulo determinado
-    app.get('/v' + APIRESTVERSION.prod + '/getJiraProjectsList', utils.getJiraProjectsList); // [ERHA] devuelve el listado de los proyectos
+    app.get('/v' + APIRESTVERSION.prod + '/getLeaderByProjectAndModule/:project&:module', erhaUtils.getLeaderByProjectAndModule); // [ERHA] devuelve el lider para un proyecto y modulo determinado
+    app.get('/v' + APIRESTVERSION.prod + '/getJiraProjectsList', jiraUtils.getJiraProjectsList); // [ERHA] devuelve el listado de los proyectos
+    app.get('/v' + APIRESTVERSION.prod + '/infomeDespliegue/verifyVersionTag/:project&:module&:version', jiraUtils.verifyVersionTag); // [ERHA] devuelve el listado de tag existentes par aun proyecto
+    app.get('/v' + APIRESTVERSION.prod + '/infomeDespliegue/chekAssociatedIssuesData/:project&:nroTicket', jiraUtils.chekAssociatedIssuesData); // [ERHA] Valida la existencia de un Jira
     // app.get("'/v'+APIRESTVERSION.prod+'/vincularDocumento", vincularDocumento.run);
     // app.get("'/v'+APIRESTVERSION.prod+'/noctojiraconverter", nocToJiraConverter.run);
     // app.get("'/v'+APIRESTVERSION.prod+'/convertirBase64/encode/:filedir", convertirBase64.base64Encoder); //devuelve el documento pasado por parametro como un string en Base64

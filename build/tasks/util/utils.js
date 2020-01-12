@@ -70,7 +70,6 @@ function getJiraProjectsList(req, res) {
         let result = [];
         let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
         let listData = (yield BBDDcheckDataBase.query(`SELECT id, proyecto FROM Jira_proyectos;`));
-        console.log(listData);
         if (!util_1.isNullOrUndefined(listData)) {
             for (let i = 0; i < listData.length; i++) {
                 result.push({

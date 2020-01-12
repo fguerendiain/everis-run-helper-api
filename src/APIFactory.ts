@@ -9,7 +9,8 @@ import * as informeMensualPriorizados from './tasks/informeMensualPriorizados';
 import * as asiJiraToJiraConverter from './tasks/asiJiraToJiraConverter';
 import * as checkTask from './tasks/checkTask';
 import * as config from './config';
-import * as utils from './tasks/util/utils';
+import * as jiraUtils from './utils/jiraUtils';
+import * as erhaUtils from './utils/erhaUtils';
 
 // import * as vincularDocumento from './tasks/vincularDocumento';
 // import * as nocToJiraConverter from './tasks/nocToJiraConverter';
@@ -38,14 +39,14 @@ export function build():Express{
     app.post('/v'+APIRESTVERSION.prod+'/asijiratojiraconverter/:asijira', asiJiraToJiraConverter.createJirafromAsiJira); // [DESA] importa los jiraAsi a Jira segun parametro enviado por el usuario
     app.get('/v'+APIRESTVERSION.prod+'/checktask/:id', checkTask.checkTaskProcessStatusById); // [ERHA] devuelve estado de ejecucion de tarea
 
-
     //REGULATORIOS
 //    app.get("'/v'+APIRESTVERSION.prod+'/appSade9570", appSade9570.run); //genera nueva transaccion a partir de la anterior, imprime update para actualizar registro de psoc con nueva transaccion.
 
     //DEVELOP
-    app.get('/v'+APIRESTVERSION.prod+'/getLeaderByProjectAndModule/:project&:module', utils.getLeaderByProjectAndModule); // [ERHA] devuelve el lider para un proyecto y modulo determinado
-    app.get('/v'+APIRESTVERSION.prod+'/getJiraProjectsList', utils.getJiraProjectsList); // [ERHA] devuelve el listado de los proyectos
-
+    app.get('/v'+APIRESTVERSION.prod+'/getLeaderByProjectAndModule/:project&:module', erhaUtils.getLeaderByProjectAndModule); // [ERHA] devuelve el lider para un proyecto y modulo determinado
+    app.get('/v'+APIRESTVERSION.prod+'/getJiraProjectsList', jiraUtils.getJiraProjectsList); // [ERHA] devuelve el listado de los proyectos
+    app.get('/v'+APIRESTVERSION.prod+'/infomeDespliegue/verifyVersionTag/:project&:module&:version', jiraUtils.verifyVersionTag ); // [ERHA] devuelve el listado de tag existentes par aun proyecto
+    app.get('/v'+APIRESTVERSION.prod+'/infomeDespliegue/chekAssociatedIssuesData/:project&:nroTicket', jiraUtils.chekAssociatedIssuesData ); // [ERHA] Valida la existencia de un Jira
 
     // app.get("'/v'+APIRESTVERSION.prod+'/vincularDocumento", vincularDocumento.run);
     // app.get("'/v'+APIRESTVERSION.prod+'/noctojiraconverter", nocToJiraConverter.run);
