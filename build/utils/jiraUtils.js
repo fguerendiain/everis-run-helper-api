@@ -9,15 +9,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const logger = require("../logger");
-const bbddpostgres = require("../entities/BBDDPostgres");
 const util_1 = require("util");
 const AsiJiraService = require("../externalServices/RESTService/ASIJIRAService");
-const TASKNAME = 'UTILS';
+const TASKNAME = 'JIRAUTILS';
 const TASKLABLE = 'UTIL';
 let response;
 function verifyVersionTag(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        logger.taskBeginInfo(TASKNAME + "verifyVersionTag");
+        logger.taskBeginInfo(TASKNAME + " verifyVersionTag");
         response = res;
         let projectParam = '#';
         let moduleParam = '#';
@@ -52,16 +51,16 @@ function verifyVersionTag(req, res) {
         //SE ENVIA RESPUESTA AL CLIENTE
         yield response.status(200).send(result);
         logger.info(TASKLABLE, JSON.stringify(result));
-        logger.taskEndInfo(TASKNAME);
+        logger.taskEndInfo(TASKNAME + ' verifyVersionTag');
     });
 }
 exports.verifyVersionTag = verifyVersionTag;
 function chekAssociatedIssuesData(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        logger.taskBeginInfo(TASKNAME);
+        logger.taskBeginInfo(TASKNAME + ' chekAssociatedIssuesData');
         response = res;
         let projectParam = '#';
-        let nroTicketParam = 0;
+        let nroTicketParam = '#';
         let result;
         result = {
             idAsiJira: 0,
@@ -89,30 +88,8 @@ function chekAssociatedIssuesData(req, res) {
         //SE ENVIA RESPUESTA AL CLIENTE
         yield response.status(200).send(result);
         logger.info(TASKLABLE, JSON.stringify(result));
-        logger.taskEndInfo(TASKNAME);
+        logger.taskEndInfo(TASKNAME + ' chekAssociatedIssuesData');
     });
 }
 exports.chekAssociatedIssuesData = chekAssociatedIssuesData;
-function getJiraProjectsList(req, res) {
-    return __awaiter(this, void 0, void 0, function* () {
-        logger.taskBeginInfo(TASKNAME + "getJiraProjectsList");
-        response = res;
-        let result = [];
-        let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
-        let listData = (yield BBDDcheckDataBase.query(`SELECT id, proyecto FROM Jira_proyectos;`));
-        if (!util_1.isNullOrUndefined(listData)) {
-            for (let i = 0; i < listData.length; i++) {
-                result.push({
-                    id: listData[i].id,
-                    project: listData[i].proyecto
-                });
-            }
-        }
-        //SE ENVIA RESPUESTA AL CLIENTE
-        yield response.status(200).send(result);
-        logger.info(TASKLABLE, JSON.stringify(result));
-        logger.taskEndInfo(TASKNAME);
-    });
-}
-exports.getJiraProjectsList = getJiraProjectsList;
 //# sourceMappingURL=jiraUtils.js.map

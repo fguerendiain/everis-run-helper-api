@@ -11,12 +11,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const logger = require("../logger");
 const bbddpostgres = require("../entities/BBDDPostgres");
 const util_1 = require("util");
-const TASKNAME = 'UTILS';
+const TASKNAME = 'ERHAUTILS';
 const TASKLABLE = 'UTIL';
 let response;
 function getLeaderByProjectAndModule(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        logger.taskBeginInfo(TASKNAME + "getLeaderByProjectAndModule");
+        logger.taskBeginInfo(TASKNAME + " getLeaderByProjectAndModule");
         response = res;
         let projectParam = '';
         let moduleParam = '';
@@ -38,8 +38,8 @@ function getLeaderByProjectAndModule(req, res) {
         JOIN Jira_proyectos jp ON jam.fk_jira_proy = jp.id
         JOIN Jira_usuarios ju ON jam.fk_jira_usuario = ju.id
         JOIN Everis_empleados ee ON ju.fk_everis_Empleado = ee.id
-        WHERE jp.proyecto = '` + projectParam.toUpperCase() + `'
-        AND jc.componente = '` + moduleParam.toUpperCase() + `';`))[0];
+        WHERE UPPER(jp.proyecto) = '` + projectParam.toUpperCase() + `'
+        AND UPPER(jc.componente) = '` + moduleParam.toUpperCase() + `';`))[0];
         if (!util_1.isNullOrUndefined(liderData)) {
             let emailAux = '';
             let cuitAux = '';
@@ -59,8 +59,52 @@ function getLeaderByProjectAndModule(req, res) {
         //SE ENVIA RESPUESTA AL CLIENTE
         yield response.status(200).send(result);
         logger.info(TASKLABLE, JSON.stringify(result));
-        logger.taskEndInfo(TASKNAME);
+        logger.taskEndInfo(TASKNAME + ' getLeaderByProjectAndModule');
     });
 }
 exports.getLeaderByProjectAndModule = getLeaderByProjectAndModule;
+function getProjects(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        logger.taskBeginInfo(TASKNAME + " getJiraProjectsList");
+        response = res;
+        let result = [];
+        let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
+        let listData = (yield BBDDcheckDataBase.query(`SELECT id, proyecto FROM Jira_proyectos;`));
+        if (!util_1.isNullOrUndefined(listData)) {
+            for (let i = 0; i < listData.length; i++) {
+                result.push({
+                    id: listData[i].id,
+                    project: listData[i].proyecto
+                });
+            }
+        }
+        //SE ENVIA RESPUESTA AL CLIENTE
+        yield response.status(200).send(result);
+        logger.info(TASKLABLE, JSON.stringify(result));
+        logger.taskEndInfo(TASKNAME + ' getJiraProjectsList');
+    });
+}
+exports.getProjects = getProjects;
+function getModules(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        logger.taskBeginInfo(TASKNAME + " getModules");
+        response = res;
+        let result = [];
+        let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
+        let listData = (yield BBDDcheckDataBase.query(`SELECT id, componente FROM AsiJira_Componentes;`));
+        if (!util_1.isNullOrUndefined(listData)) {
+            for (let i = 0; i < listData.length; i++) {
+                result.push({
+                    id: listData[i].id,
+                    module: listData[i].componente
+                });
+            }
+        }
+        //SE ENVIA RESPUESTA AL CLIENTE
+        yield response.status(200).send(result);
+        logger.info(TASKLABLE, JSON.stringify(result));
+        logger.taskEndInfo(TASKNAME + ' getModules');
+    });
+}
+exports.getModules = getModules;
 //# sourceMappingURL=erhaUtils.js.map

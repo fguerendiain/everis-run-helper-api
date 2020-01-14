@@ -21,6 +21,7 @@ export abstract class ticket{
 	private priroriry:string;
 	private reporter:string;
     private comments = new Array;
+    private project: string;
     private attachments = new Array; //falta en jira
 
     //getters & setters    
@@ -32,6 +33,14 @@ export abstract class ticket{
         this.id = v_id;
     }
 
+    public getProject(){
+        return this.project;        
+       }
+   
+    public setProject(v_project){
+        this.project = v_project;
+    }
+   
     public getSubject(){
         return this.subject;        
        }

@@ -69,7 +69,7 @@ export async function chekAssociatedIssuesData(req: express.Request, res: expres
     response = res;    
 
     let projectParam:string = '#';
-    let nroTicketParam: number = 0;
+    let nroTicketParam: string = '#';
 
     let result: {
         idAsiJira:number,
@@ -110,35 +110,5 @@ export async function chekAssociatedIssuesData(req: express.Request, res: expres
 
     logger.info(TASKLABLE,JSON.stringify(result));
     logger.taskEndInfo(TASKNAME + ' chekAssociatedIssuesData');
-
-}
-
-
-export async function getJiraProjectsList(req: express.Request, res: express.Response){
-
-    logger.taskBeginInfo(TASKNAME + " getJiraProjectsList");
-    response = res;    
-
-    let result = [];
-
-	let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
-    let listData = (await BBDDcheckDataBase.query(
-        `SELECT id, proyecto FROM Jira_proyectos;`
-        ));
-
-    if (!isNullOrUndefined(listData)) {
-        for (let i = 0; i < (<[]>listData).length; i++) {
-            result.push({
-                id: listData[i].id, 
-                project: listData[i].proyecto
-            });
-        }    
-    }
-
-    //SE ENVIA RESPUESTA AL CLIENTE
-    await response.status(200).send(result);
-
-    logger.info(TASKLABLE,JSON.stringify(result));
-    logger.taskEndInfo(TASKNAME + ' getJiraProjectsList');
 
 }

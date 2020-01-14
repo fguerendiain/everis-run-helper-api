@@ -20,6 +20,12 @@ class ticket {
     setId(v_id) {
         this.id = v_id;
     }
+    getProject() {
+        return this.project;
+    }
+    setProject(v_project) {
+        this.project = v_project;
+    }
     getSubject() {
         return this.subject;
     }

@@ -66,6 +66,7 @@ class AsiJira extends Ticket_1.ticket {
                 this.setSubject(jiraData.key + " - " + jiraData.fields.summary);
                 this.setCreated(jiraData.fields.created);
                 this.setUpdated(jiraData.fields.updated);
+                this.setProject(jiraData.fields.project.key);
                 this.setDescription("https://asijira.buenosaires.gob.ar/browse/" + jiraData.key + "\r\n\r\n" + jiraData.fields.description + "\r\n\r\n------------------\r\nDATOS DE INFORMADOR:\r\n" + jiraData.fields.reporter.displayName + "\r\n" + jiraData.fields.reporter.emailAddress);
                 if (!util_1.isNullOrUndefined(jiraData.fields.issuetype.name)) {
                     this.setType(jiraData.fields.issuetype.name);
@@ -73,6 +74,10 @@ class AsiJira extends Ticket_1.ticket {
                 ;
                 if (!util_1.isNullOrUndefined(jiraData.fields.status.name)) {
                     this.setStatus(jiraData.fields.status.name);
+                }
+                ;
+                if (!util_1.isNullOrUndefined(jiraData.fields.versions.name)) {
+                    this.setVersion(jiraData.fields.versions.name);
                 }
                 ;
                 this.setPriroriry(jiraData.fields.priority.id);
@@ -126,11 +131,11 @@ class AsiJira extends Ticket_1.ticket {
     setAssigne(v_assigne) {
         this.assigne = v_assigne;
     }
-    getProject() {
-        return this.project;
+    getVersion() {
+        return this.version;
     }
-    setProject(v_project) {
-        this.project = v_project;
+    setVersion(v_version) {
+        this.version = v_version;
     }
     getLabels() {
         return this.labels;

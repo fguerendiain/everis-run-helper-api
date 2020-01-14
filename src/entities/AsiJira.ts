@@ -7,12 +7,12 @@ import { isNullOrUndefined } from 'util';
 export class AsiJira extends ticket{
 
 	private assigne:string;
-	private project:string;
     private labels = new Array;
     private components = new Array;
 	private reopenCounter:number;
 	private timeTrakingLogged:number
-	private worklog = new Array;
+    private worklog = new Array;
+    private version: number;
 
     constructor(v_id?:string){
         super();
@@ -67,9 +67,11 @@ export class AsiJira extends ticket{
             this.setSubject(jiraData.key+" - "+jiraData.fields.summary);
             this.setCreated(jiraData.fields.created);
             this.setUpdated(jiraData.fields.updated);
+            this.setProject(jiraData.fields.project.key)
             this.setDescription("https://asijira.buenosaires.gob.ar/browse/"+jiraData.key+"\r\n\r\n"+jiraData.fields.description+"\r\n\r\n------------------\r\nDATOS DE INFORMADOR:\r\n"+jiraData.fields.reporter.displayName+"\r\n"+jiraData.fields.reporter.emailAddress);
             if(!isNullOrUndefined(jiraData.fields.issuetype.name)){this.setType(jiraData.fields.issuetype.name);}; 
             if(!isNullOrUndefined(jiraData.fields.status.name)){this.setStatus(jiraData.fields.status.name);};
+            if(!isNullOrUndefined(jiraData.fields.versions.name)){this.setVersion(jiraData.fields.versions.name);};
             this.setPriroriry(jiraData.fields.priority.id);
             if(!isNullOrUndefined(jiraData.fields.reporter.name)){this.setReporter(jiraData.fields.reporter.name);};
             this.settimeTrakingLogged(jiraData.fields.timetracking.timeSpentSeconds);
@@ -128,12 +130,12 @@ export class AsiJira extends ticket{
         this.assigne = v_assigne;
     }
 
-    public getProject(){
-        return this.project;        
+    public getVersion(){
+        return this.version;        
        }
    
-    public setProject(v_project){
-        this.project = v_project;
+    public setVersion(v_version){
+        this.version = v_version;
     }
 
     public getLabels(){
