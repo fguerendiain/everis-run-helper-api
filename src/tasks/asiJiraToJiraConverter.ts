@@ -179,6 +179,7 @@ export async function createJirafromAsiJira(req: express.Request, res: express.R
                     jira.setDescription(asijira.getDescription());        
                     jira.setPriroriry(asijira.getPriroriry());
                     jira.setLabels(asijira.getProject());
+                    jira.setProject('BISADE');
     
                     let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
                     let componentMapper;

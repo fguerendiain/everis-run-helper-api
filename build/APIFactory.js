@@ -3,15 +3,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const vincularDocumento = require("./tasks/vincularDocumento");
-const nocToJiraConverter = require("./tasks/nocToJiraConverter");
 const informeBacklogDiario = require("./tasks/informeBacklogDiario");
 const priorizadosupdate = require("./tasks/priorizadosUpdate");
 const informeMensualPriorizados = require("./tasks/informeMensualPriorizados");
-const convertirBase64 = require("./tasks/convertirBase64");
 const asiJiraToJiraConverter = require("./tasks/asiJiraToJiraConverter");
 const checkTask = require("./tasks/checkTask");
 const config = require("./config");
+const jiraUtils = require("./utils/jiraUtils");
+const erhaUtils = require("./utils/erhaUtils");
+const informeDespliegue = require("./tasks/gestionEnvioDespliegues/gestionEnvioDespliegues");
+// import * as vincularDocumento from './tasks/vincularDocumento';
+// import * as nocToJiraConverter from './tasks/nocToJiraConverter';
+// import * as convertirBase64 from './tasks/convertirBase64';
 const APIRESTVERSION = config.get("apiRestVersion");
 function build() {
     let app = express();
@@ -30,9 +33,15 @@ function build() {
     //REGULATORIOS
     //    app.get("'/v'+APIRESTVERSION.prod+'/appSade9570", appSade9570.run); //genera nueva transaccion a partir de la anterior, imprime update para actualizar registro de psoc con nueva transaccion.
     //DEVELOP
-    app.get("'/v'+APIRESTVERSION.prod+'/vincularDocumento", vincularDocumento.run);
-    app.get("'/v'+APIRESTVERSION.prod+'/noctojiraconverter", nocToJiraConverter.run);
-    app.get("'/v'+APIRESTVERSION.prod+'/convertirBase64/encode/:filedir", convertirBase64.base64Encoder); //devuelve el documento pasado por parametro como un string en Base64
+    app.get('/v' + APIRESTVERSION.prod + '/getLeaderByProjectAndModule/:project&:module', erhaUtils.getLeaderByProjectAndModule); // [ERHA] devuelve el lider para un proyecto y modulo determinado
+    app.get('/v' + APIRESTVERSION.prod + '/getProjects', erhaUtils.getProjects); // [ERHA] devuelve el listado de los proyectos
+    app.get('/v' + APIRESTVERSION.prod + '/getModules', erhaUtils.getModules); // [ERHA] devuelve el listado de los Modulos
+    app.get('/v' + APIRESTVERSION.prod + '/infomeDespliegue/verifyVersionTag/:project&:module&:version', jiraUtils.verifyVersionTag); // [ERHA] devuelve el listado de tag existentes par aun proyecto
+    app.get('/v' + APIRESTVERSION.prod + '/infomeDespliegue/chekAssociatedIssuesData/:project&:nroTicket', jiraUtils.chekAssociatedIssuesData); // [ERHA] Valida la existencia de un Jira
+    app.post('/v' + APIRESTVERSION.prod + '/infomeDespliegue/generarDespliegue', informeDespliegue.generarDespliegue); // [ERHA] genera NOC o ASIJIRA y envia mail para despliegue de version
+    // app.get("'/v'+APIRESTVERSION.prod+'/vincularDocumento", vincularDocumento.run);
+    // app.get("'/v'+APIRESTVERSION.prod+'/noctojiraconverter", nocToJiraConverter.run);
+    // app.get("'/v'+APIRESTVERSION.prod+'/convertirBase64/encode/:filedir", convertirBase64.base64Encoder); //devuelve el documento pasado por parametro como un string en Base64
     return app;
 }
 exports.build = build;

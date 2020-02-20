@@ -12,16 +12,17 @@ function getJiraById(v_query) {
     return resttools.apiRestConsume(url, method, headers, getJiraById.name, null, param);
 }
 exports.getJiraById = getJiraById;
-/*     //CREAR JIRA
-    export function createJira(jiraInstance:AsiJira){
-        let url = JIRACREDENTIALS.host;
-        let method = "POST";
-        let headers = '{"Content-Type":"application/json","Accept":"application/json",'+authConverter()+',"Cookie":"'+JIRACREDENTIALS.jsonidcookie+'"}';
-        let param = 'issue';
-        let body = bodyFormatForJira(jiraInstance);
-        return resttools.apiRestConsume(url,method,headers,createJira.name,body,param);
-    }
-
+//CREAR JIRA
+function createJira(jiraInstance) {
+    let url = JIRACREDENTIALS.host;
+    let method = "POST";
+    let headers = { "Content-Type": "application/json", Authorization: authConverter_v2() };
+    let param = 'issue';
+    let body = bodyFormatForJira(jiraInstance);
+    return resttools.apiRestConsume_v1(url, method, headers, createJira.name, body, param);
+}
+exports.createJira = createJira;
+/*
     //MODIFICAR JIRA
     export function modifyJira(jiraInstance:AsiJira){
         let url = JIRACREDENTIALS.host;
@@ -97,6 +98,15 @@ function getJiraByJql(v_query) {
     return resttools.apiRestConsume_v1(url, method, headers, getJiraByJql.name, null, param);
 }
 exports.getJiraByJql = getJiraByJql;
+//BUSCAR ETIQUETAS DE PROYECTO
+function getJiraProjectTagList(v_query) {
+    let url = JIRACREDENTIALS.host;
+    let method = "GET";
+    let headers = { "Content-Type": "application/json", Accept: "application/json", Authorization: authConverter_v2(), Cookie: JIRACREDENTIALS.jsonidcookie };
+    let param = 'project/' + v_query + '/versions';
+    return resttools.apiRestConsume_v1(url, method, headers, getJiraByJql.name, null, param);
+}
+exports.getJiraProjectTagList = getJiraProjectTagList;
 //OBTENER TRANSICION DE JIRA
 function getTransicionJira(v_query) {
     let url = JIRACREDENTIALS.host;
@@ -115,31 +125,27 @@ function authConverter_v2() {
 }
 function bodyFormatForJira(v_JiraObject) {
     let body = {
-        "fields": {
-            "summary": v_JiraObject.getSubject(),
-            "issuetype": {
-                "name": v_JiraObject.getType()
+        fields: {
+            summary: v_JiraObject.getSubject(),
+            issuetype: {
+                id: v_JiraObject.getType()
             },
-            "components": componentBuilder(v_JiraObject),
-            "versions": [
+            customfield_10187: {
+                name: v_JiraObject.getAssigne()
+            },
+            components: componentBuilder(v_JiraObject),
+            fixVersions: [
                 {
-                    "id": "111917"
+                    id: v_JiraObject.getVersion()
                 }
             ],
-            "project": {
-                "key": "BISADE"
+            project: {
+                key: v_JiraObject.getProject()
             },
-            "description": v_JiraObject.getDescription(),
-            "assignee": {
-                "name": v_JiraObject.getAssigne()
-            },
-            "priority": {
-                "id": v_JiraObject.getPriroriry()
-            },
-            "labels": v_JiraObject.getLabels()
+            description: v_JiraObject.getDescription()
         }
     };
-    return JSON.stringify(body);
+    return body;
 }
 function componentBuilder(v_JiraObject) {
     let formatedComponents = new Array;

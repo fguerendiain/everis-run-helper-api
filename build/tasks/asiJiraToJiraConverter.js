@@ -161,6 +161,7 @@ function createJirafromAsiJira(req, res) {
                         jira.setDescription(asijira.getDescription());
                         jira.setPriroriry(asijira.getPriroriry());
                         jira.setLabels(asijira.getProject());
+                        jira.setProject('BISADE');
                         let BBDDcheckDataBase = new bbddpostgres.BBDDconect();
                         let componentMapper;
                         if (!util_1.isNullOrUndefined(asijira.getComponents()) && asijira.getComponents().length > 0) {

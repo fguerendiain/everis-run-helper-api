@@ -16,16 +16,17 @@ const JIRACREDENTIALS = config.get("credentials").asijira;
     }
 
 
-/*     //CREAR JIRA
+    //CREAR JIRA
     export function createJira(jiraInstance:AsiJira){
         let url = JIRACREDENTIALS.host;
         let method = "POST";
-        let headers = '{"Content-Type":"application/json","Accept":"application/json",'+authConverter()+',"Cookie":"'+JIRACREDENTIALS.jsonidcookie+'"}';
+        let headers:{} = {"Content-Type":"application/json",Authorization:authConverter_v2()};
         let param = 'issue';
         let body = bodyFormatForJira(jiraInstance);
-        return resttools.apiRestConsume(url,method,headers,createJira.name,body,param);
+        return resttools.apiRestConsume_v1(url,method,headers,createJira.name,body,param);
     }
 
+/*
     //MODIFICAR JIRA
     export function modifyJira(jiraInstance:AsiJira){
         let url = JIRACREDENTIALS.host;
@@ -103,6 +104,17 @@ const JIRACREDENTIALS = config.get("credentials").asijira;
         return resttools.apiRestConsume_v1(url,method,headers,getJiraByJql.name,null,param);
     }
 
+     
+    //BUSCAR ETIQUETAS DE PROYECTO
+    export function getJiraProjectTagList(v_query:string){
+        let url = JIRACREDENTIALS.host;
+        let method = "GET";
+        let headers:{} = {"Content-Type":"application/json",Accept:"application/json",Authorization:authConverter_v2(),Cookie:JIRACREDENTIALS.jsonidcookie};
+        let param = 'project/'+v_query+'/versions';
+        return resttools.apiRestConsume_v1(url,method,headers,getJiraByJql.name,null,param);
+    }
+
+
 
     //OBTENER TRANSICION DE JIRA
     export function getTransicionJira(v_query:string){
@@ -131,31 +143,27 @@ const JIRACREDENTIALS = config.get("credentials").asijira;
 
     function bodyFormatForJira(v_JiraObject:AsiJira){
         let body:{} = {
-            "fields": {
-                "summary" : v_JiraObject.getSubject(),
-                "issuetype": {
-                    "name" : v_JiraObject.getType()
+            fields: {
+                summary : v_JiraObject.getSubject(),
+                issuetype: {
+                    id : v_JiraObject.getType()
                 },
-                "components": componentBuilder(v_JiraObject),
-                "versions": [
+                customfield_10187: { //responsable
+                    name: v_JiraObject.getAssigne()
+                },
+                components: componentBuilder(v_JiraObject),
+                fixVersions: [
                     {
-                        "id": "111917"
+                        id: v_JiraObject.getVersion()
                     }
                 ],
-                "project": {
-                    "key": "BISADE"
+                project: {
+                    key: v_JiraObject.getProject()
                 },
-                "description": v_JiraObject.getDescription(),
-                "assignee": {
-                    "name": v_JiraObject.getAssigne()
-                },
-                "priority": {
-                    "id": v_JiraObject.getPriroriry()
-                },
-                "labels": v_JiraObject.getLabels()
+                description: v_JiraObject.getDescription()
             }
         };
-        return JSON.stringify(body);
+        return body
     }
 
     function componentBuilder(v_JiraObject:AsiJira){
