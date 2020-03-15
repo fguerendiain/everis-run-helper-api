@@ -66,33 +66,39 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 	//obtengo listado de JIRAS con reopen en 1 modificados el dia anterior al actual
 	let queryJIRAReOpen = (await jiraservices.getJiraByJql('project = BISADE AND issuetype = COM_Bug AND labels = APM-SUP AND status in (Open, "In Progress", Paused) AND "Reopen Counter" = "1" AND updated >= -1d AND updated <= 0d').catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined})).total;
 	//Obtengo listado de JIRAS correspondientes a regulatorios repetitivos
-	let quwryJIRARepetitivos = (await jiraservices.getJiraByJql('project = BISADE AND issuetype = COM_Bug AND labels = REGULATORIO AND status in (Open, "In Progress")').catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined})).total
+	let queryJIRARepetitivos = (await jiraservices.getJiraByJql('project = BISADE AND issuetype = COM_Bug AND labels = REGULATORIO AND status in (Open, "In Progress")').catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined})).total
+	//Obtengo listado de JIRAS correspondientes a RUN-N3
+	let queryJIRARunN3 = (await jiraservices.getJiraByJql('project = BISADE AND issuetype = COM_Bug AND labels = RUN-N3 AND status in (Open, "In Progress")').catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined})).total
 
 	if(isNullOrUndefined(queryNocsIdEnBandeja)){
 		let mailTxt = 'error de servicio externo al obtener Tickets en bandeja';
+		await checktask.saveStatus(processID.id,TASKNAME,PROCESSSTATUS.error,mailTxt);
 		await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
 		logger.taskEndInfo(TASKNAME);
 		return;
 	}
 	if(isNullOrUndefined(queryJIRACreados)){
 		let mailTxt = 'error de servicio externo al obtener Tickets creados';
+		await checktask.saveStatus(processID.id,TASKNAME,PROCESSSTATUS.error,mailTxt);
 		await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
 		logger.taskEndInfo(TASKNAME);
 		return;
 	}
 	if(isNullOrUndefined(queryJIRAResueltos)){
 		let mailTxt = 'error de servicio externo al obtener Tickets resueltos';
+		await checktask.saveStatus(processID.id,TASKNAME,PROCESSSTATUS.error,mailTxt);
 		await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
 		logger.taskEndInfo(TASKNAME);
 		return;
 	}
 	if(isNullOrUndefined(queryJIRAReOpen)){
 		let mailTxt = 'error de servicio externo al obtener Tickets reabiertos';
+		await checktask.saveStatus(processID.id,TASKNAME,PROCESSSTATUS.error,mailTxt);
 		await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
 		logger.taskEndInfo(TASKNAME);
 		return;
 	}
-	if(isNullOrUndefined(quwryJIRARepetitivos)){
+	if(isNullOrUndefined(queryJIRARepetitivos)){
 		let mailTxt = 'error de servicio externo al obtener Tickets repetitivos';
 		await checktask.saveStatus(processID.id,TASKNAME,PROCESSSTATUS.error,mailTxt);
 		await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
@@ -100,6 +106,13 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 		return;
 	}
 
+	if(isNullOrUndefined(queryJIRARunN3)){
+		let mailTxt = 'error de servicio externo al obtener Tickets RUN-N3';
+		await checktask.saveStatus(processID.id,TASKNAME,PROCESSSTATUS.error,mailTxt);
+		await emailtools.sendByMail(RESPONSABLE,'Error: '+TASKNAME,mailTxt);
+		logger.taskEndInfo(TASKNAME);
+		return;
+	}
 
 	//genero un array de objetos noc
 	for(let i = 0; i < queryNocsIdEnBandeja.length; i++){
@@ -247,7 +260,7 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 		v_saveBacklogBBDDQuery += /*PRIORIZADO_PORCENTUAL_URGENTE*/((countBacklogPriorizadoUrgente/queryNocsIdEnBandeja.length).toFixed(2))+',';
 		v_saveBacklogBBDDQuery += /*REABIERTOS*/queryJIRAReOpen+',';
 		v_saveBacklogBBDDQuery += /*RESUMEN_PRIORIZADOS*/priorizadosPorRegistro.length+',';
-		v_saveBacklogBBDDQuery += /*RESUMEN_REPETITIVOS*/quwryJIRARepetitivos+',';
+		v_saveBacklogBBDDQuery += /*RESUMEN_REPETITIVOS*/queryJIRARepetitivos+',';
 		v_saveBacklogBBDDQuery += /*RESUMEN_TOTAL_PENDIENTES*/queryNocsIdEnBandeja.length+',';
 		v_saveBacklogBBDDQuery += /*DISTRIBUCION*/"'"+JSON.stringify(distribucionModulo)+"');";
 		
@@ -267,8 +280,9 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 		"priorizacionDiaUrgente": countBacklogPriorizadoUrgente,
 		"reaperturas": queryJIRAReOpen,
 		"priorizados": priorizadosPorRegistro.length,
-		"repetitivos": quwryJIRARepetitivos,
-		"totalPendientes": queryNocsIdEnBandeja.length
+		"repetitivos": queryJIRARepetitivos,
+		"totalPendientes": queryNocsIdEnBandeja.length,
+		"runn3":queryJIRARunN3
 	};
 
 
