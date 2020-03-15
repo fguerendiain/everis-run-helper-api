@@ -64,33 +64,46 @@ function backlogDiario(req, res) {
         //obtengo listado de JIRAS con reopen en 1 modificados el dia anterior al actual
         let queryJIRAReOpen = (yield jiraservices.getJiraByJql('project = BISADE AND issuetype = COM_Bug AND labels = APM-SUP AND status in (Open, "In Progress", Paused) AND "Reopen Counter" = "1" AND updated >= -1d AND updated <= 0d').catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; })).total;
         //Obtengo listado de JIRAS correspondientes a regulatorios repetitivos
-        let quwryJIRARepetitivos = (yield jiraservices.getJiraByJql('project = BISADE AND issuetype = COM_Bug AND labels = REGULATORIO AND status in (Open, "In Progress")').catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; })).total;
+        let queryJIRARepetitivos = (yield jiraservices.getJiraByJql('project = BISADE AND issuetype = COM_Bug AND labels = REGULATORIO AND status in (Open, "In Progress")').catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; })).total;
+        //Obtengo listado de JIRAS correspondientes a RUN-N3
+        let queryJIRARunN3 = (yield jiraservices.getJiraByJql('project = BISADE AND issuetype = COM_Bug AND (labels = APM-SUP AND labels = RUN-N3) AND status in (Open, "In Progress")').catch((err) => { logger.awaitAsyncErrorHandler(err); return undefined; })).total;
         if (util_1.isNullOrUndefined(queryNocsIdEnBandeja)) {
             let mailTxt = 'error de servicio externo al obtener Tickets en bandeja';
+            yield checktask.saveStatus(processID.id, TASKNAME, PROCESSSTATUS.error, mailTxt);
             yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
             logger.taskEndInfo(TASKNAME);
             return;
         }
         if (util_1.isNullOrUndefined(queryJIRACreados)) {
             let mailTxt = 'error de servicio externo al obtener Tickets creados';
+            yield checktask.saveStatus(processID.id, TASKNAME, PROCESSSTATUS.error, mailTxt);
             yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
             logger.taskEndInfo(TASKNAME);
             return;
         }
         if (util_1.isNullOrUndefined(queryJIRAResueltos)) {
             let mailTxt = 'error de servicio externo al obtener Tickets resueltos';
+            yield checktask.saveStatus(processID.id, TASKNAME, PROCESSSTATUS.error, mailTxt);
             yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
             logger.taskEndInfo(TASKNAME);
             return;
         }
         if (util_1.isNullOrUndefined(queryJIRAReOpen)) {
             let mailTxt = 'error de servicio externo al obtener Tickets reabiertos';
+            yield checktask.saveStatus(processID.id, TASKNAME, PROCESSSTATUS.error, mailTxt);
             yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
             logger.taskEndInfo(TASKNAME);
             return;
         }
-        if (util_1.isNullOrUndefined(quwryJIRARepetitivos)) {
+        if (util_1.isNullOrUndefined(queryJIRARepetitivos)) {
             let mailTxt = 'error de servicio externo al obtener Tickets repetitivos';
+            yield checktask.saveStatus(processID.id, TASKNAME, PROCESSSTATUS.error, mailTxt);
+            yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
+            logger.taskEndInfo(TASKNAME);
+            return;
+        }
+        if (util_1.isNullOrUndefined(queryJIRARunN3)) {
+            let mailTxt = 'error de servicio externo al obtener Tickets RUN-N3';
             yield checktask.saveStatus(processID.id, TASKNAME, PROCESSSTATUS.error, mailTxt);
             yield emailtools.sendByMail(RESPONSABLE, 'Error: ' + TASKNAME, mailTxt);
             logger.taskEndInfo(TASKNAME);
@@ -230,7 +243,7 @@ function backlogDiario(req, res) {
             v_saveBacklogBBDDQuery += /*PRIORIZADO_PORCENTUAL_URGENTE*/ ((countBacklogPriorizadoUrgente / queryNocsIdEnBandeja.length).toFixed(2)) + ',';
             v_saveBacklogBBDDQuery += /*REABIERTOS*/ queryJIRAReOpen + ',';
             v_saveBacklogBBDDQuery += /*RESUMEN_PRIORIZADOS*/ priorizadosPorRegistro.length + ',';
-            v_saveBacklogBBDDQuery += /*RESUMEN_REPETITIVOS*/ quwryJIRARepetitivos + ',';
+            v_saveBacklogBBDDQuery += /*RESUMEN_REPETITIVOS*/ queryJIRARepetitivos + ',';
             v_saveBacklogBBDDQuery += /*RESUMEN_TOTAL_PENDIENTES*/ queryNocsIdEnBandeja.length + ',';
             v_saveBacklogBBDDQuery += /*DISTRIBUCION*/ "'" + JSON.stringify(distribucionModulo) + "');";
             //si no existen registros de backlog para la fecha lo inserto en la BBDD
@@ -247,8 +260,9 @@ function backlogDiario(req, res) {
             "priorizacionDiaUrgente": countBacklogPriorizadoUrgente,
             "reaperturas": queryJIRAReOpen,
             "priorizados": priorizadosPorRegistro.length,
-            "repetitivos": quwryJIRARepetitivos,
-            "totalPendientes": queryNocsIdEnBandeja.length
+            "repetitivos": queryJIRARepetitivos,
+            "totalPendientes": queryNocsIdEnBandeja.length,
+            "runn3": queryJIRARunN3
         };
         //armo el json de la respuesta final
         let backlogJsonResponse = {
