@@ -68,7 +68,7 @@ export async function backlogDiario(req: express.Request, res: express.Response)
 	//Obtengo listado de JIRAS correspondientes a regulatorios repetitivos
 	let queryJIRARepetitivos = (await jiraservices.getJiraByJql('project = BISADE AND issuetype = COM_Bug AND labels = REGULATORIO AND status in (Open, "In Progress")').catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined})).total
 	//Obtengo listado de JIRAS correspondientes a RUN-N3
-	let queryJIRARunN3 = (await jiraservices.getJiraByJql('project = BISADE AND issuetype = COM_Bug AND labels = RUN-N3 AND status in (Open, "In Progress")').catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined})).total
+	let queryJIRARunN3 = (await jiraservices.getJiraByJql('project = BISADE AND issuetype = COM_Bug AND (labels = APM-SUP AND labels = RUN-N3) AND status in (Open, "In Progress")').catch((err)=>{logger.awaitAsyncErrorHandler(err); return undefined})).total
 
 	if(isNullOrUndefined(queryNocsIdEnBandeja)){
 		let mailTxt = 'error de servicio externo al obtener Tickets en bandeja';
