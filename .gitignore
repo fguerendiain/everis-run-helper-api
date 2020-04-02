@@ -4,3 +4,5 @@ node_modules
 logs
 build
 config.json
+credentials.json
+gsheetCredentials.json
