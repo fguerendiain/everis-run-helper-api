@@ -12,32 +12,32 @@
 	"bbddoracle":{
 		"prd":{
 			"user":"gruizdec",
-			"password":"********",
+			"password":"gruiz123",
 			"connectString":"sadebd-cluster.gcba.gob.ar/sadeprd.gcba.gob.ar"
 		},
 		"hml":{
 			"user":"gruizdec",
-			"password":"********",
+			"password":"gruiz123",
 			"connectString":"sadebd-cluster.hml.gcba.gob.ar/sadehml.hml.gcba.gob.ar"
 		},
 		"qa":{
 			"user":"LOYS_MAN_SADE",
-			"password":"********",
+			"password":"loys_man_sade",
 			"connectString":"exadb.gcba.gob.ar/srv_sadeqa.gcba.gob.ar"
 		},
 		"capa":{
 			"user":"gruizdec",
-			"password":"********",
+			"password":"GRu_GOb19",
 			"connectString":"sadebd-cluster-cap.hml.gcba.gob.ar/sadecapa"
 		},
 		"standby":{
 			"user":"lparlov",
-			"password":"********",
+			"password":"l4urap",
 			"connectString":"drpdm01-scan.gcba.gob.ar/sadetst.gcba.gob.ar"
 		},
 		"test":{
 			"user":"TAD_SADE",
-			"password":"********",
+			"password":"tad_sade",
 			"connectString":"10.217.88.215/TRACKTESTBD.GCABA.EVERIS.INT"
 		}
 	},
@@ -45,7 +45,7 @@
             "user": "postgres",
             "host": "10.217.88.164",
             "database": "everis-run-helper",
-            "password": "********",
+            "password": "RXJoYTE3MDE=",
             "port": 5432
 	},
 
@@ -53,25 +53,25 @@
 		"jira":{
 			"host":"https://steps.everis.com/jiraproy/rest/api/2/",
 			"user":"fguerend",
-			"password":"********"
+			"password":"TWFtdTIyMDc5"
 		},
 		"asijira":{
 			"host":"https://asijira.buenosaires.gob.ar/rest/api/2/",
 			"user":"20266918799",
-			"password":"********",
+			"password":"SXNAQ3luMTE=",
 			"jsonidcookie" : "JSESSIONID=41FDC5CC279FD68C1D728C52EFE87D71"
 		},
 		"noc":{
 			"host":"http://noc-mesa.buenosaires.gob.ar/sdpapi/request",
-			"techniciankeyRib" : "********",
-			"techniciankey" : "********",
+			"techniciankeyRib" : "6CB1598C-752B-416B-B8DA-27644C3AF7EC",
+			"techniciankey" : "EBB36C09-BA57-4D84-B14A-8E1DFB4A775E",
 			"defaultFilter" : "15652_MyView",
 			"newNocUser": "Laura Parlov",
 			"newNocSite": "AV. RIVADAVIA 620"
 		},
 		"senderGmailAccount":{
 			"user":"everis.produccion@gmail.com",
-			"pass":"********"
+			"pass":"MTIzNG5vaWM="
 		}
 	},
 	"googlesheets":{
@@ -104,3 +104,5 @@
 		}
 	}
 }
+
+
