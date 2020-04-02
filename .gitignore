@@ -2,5 +2,4 @@ bin
 dist
 node_modules
 logs
-build
 ./config.json
